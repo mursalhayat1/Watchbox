@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <!-- Core public pages -->
+  <url>
+    <loc>https://watchbox.app/</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://watchbox.app/discover</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://watchbox.app/for-you</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://watchbox.app/search</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!--
+    Dynamic movie, TV show, and person pages are not enumerated here because
+    WatchBox uses TMDB data fetched at runtime. Search engines will discover
+    individual detail pages through internal links on the homepage, discover
+    page, and carousel rows. For large-scale sitemap coverage, generate a
+    server-side sitemap index via a Supabase Edge Function or build-time script
+    that iterates your library's tmdb_ids. See RECOMMENDED NEXT STEPS in the
+    SEO implementation report.
+  -->
+
+</urlset>

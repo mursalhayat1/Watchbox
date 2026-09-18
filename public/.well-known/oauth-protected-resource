@@ -1,0 +1,9 @@
+{
+  "resource": "https://jkjjpkvckbegcckadbxs.supabase.co/functions/v1/mcp-server",
+  "authorization_servers": [
+    "https://jkjjpkvckbegcckadbxs.supabase.co/functions/v1/well-known-oauth"
+  ],
+  "scopes_supported": ["read", "write"],
+  "bearer_methods_supported": ["header"],
+  "resource_documentation": "https://app-eb909nta4u81.miaoda.app/mcp-connect"
+}

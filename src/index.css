@@ -1,0 +1,151 @@
+/* stylelint-disable */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Watchbox — Fully Dynamic Cinematic Theme
+   ═══════════════════════════════════════════════════════════════════════════
+
+   Color architecture
+   ──────────────────
+   Two sets of CSS vars drive the entire page:
+
+   a) --theme-lp / ls / la   Light palette — visible cinematic hue
+      --theme-dp / ds         Dark palette  — cinematic background darks
+      --theme-nb              Near-black derived from hero hue
+      Written by useDynamicMovieTheme when the backdrop changes.
+
+   b) --theme-progress (0 → 1) Written by the rAF scroll listener.
+      Used only in JavaScript (HomePage gradient interpolation) — not CSS.
+
+   Fixed shadcn/ui semantic tokens (--background, --card, etc.) are derived
+   from the near-neutral dark so they read correctly for all extracted hues.
+
+   c) NO more hardcoded green. --background is neutral dark-slate.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@layer base {
+  :root {
+    /* ── Dynamic cinematic palette (overwritten per-hero by useDynamicMovieTheme) ── */
+    --theme-lp:         220 40% 32%;   /* light primary   — visible hue */
+    --theme-ls:         220 30% 24%;   /* light secondary */
+    --theme-la:         220 50% 40%;   /* light accent    */
+    --theme-dp:         220 25% 9%;    /* dark primary    — bg layer */
+    --theme-ds:         220 20% 6%;    /* dark secondary  */
+    --theme-nb:         220 10% 4%;    /* near-black      — page bottom */
+    --theme-progress:   0;             /* 0–1, driven by scroll (JS only) */
+    --theme-transition: 0ms;           /* ms, set by hook */
+
+    /* ── shadcn/ui semantic tokens — neutral, no green bias ── */
+    --radius: 0.5rem;
+    --background:           220 15% 7%;
+    --foreground:            60  5% 94%;
+    --card:                 220 15% 10%;
+    --card-foreground:       60  5% 94%;
+    --popover:              220 15% 12%;
+    --popover-foreground:    60  5% 94%;
+    --primary:              210 80% 52%;
+    --primary-foreground:     0  0%  4%;
+    --secondary:            220 12% 14%;
+    --secondary-foreground:  60  5% 94%;
+    --muted:                220 12% 14%;
+    --muted-foreground:     220 10% 52%;
+    --accent:                38 75% 52%;
+    --accent-foreground:      0  0%  4%;
+    --destructive:            0 62% 40%;
+    --destructive-foreground: 60  5% 94%;
+    --border:               220 12% 18%;
+    --input:                220 12% 18%;
+    --ring:                 210 80% 52%;
+    --chart-1: 210 80% 52%;
+    --chart-2:  38 75% 52%;
+    --chart-3: 160 60% 45%;
+    --chart-4: 280 60% 55%;
+    --chart-5:   0 65% 55%;
+    --sidebar-background:   220 15%  6%;
+    --sidebar-foreground:    60  5% 94%;
+    --sidebar-primary:      210 80% 52%;
+    --sidebar-primary-foreground: 0 0% 4%;
+    --sidebar-accent:       220 12% 14%;
+    --sidebar-accent-foreground: 60 5% 94%;
+    --sidebar-border:       220 12% 18%;
+    --sidebar-ring:         210 80% 52%;
+    --gradient-primary:     linear-gradient(135deg, hsl(210 80% 52%) 0%, hsl(220 50% 35%) 100%);
+    --gradient-card:        linear-gradient(180deg, transparent 40%, hsl(220 15% 7% / 0.95) 100%);
+    --gradient-background:  linear-gradient(180deg, hsl(220 15% 7%) 0%, hsl(220 15% 5%) 100%);
+    --shadow-card:          0 4px 16px hsl(0 0% 0% / 0.4);
+    --shadow-hover:         0 8px 32px hsl(0 0% 0% / 0.6);
+  }
+
+  .dark {
+    --background:           220 15%  7%;
+    --foreground:            60  5% 94%;
+    --card:                 220 15% 10%;
+    --card-foreground:       60  5% 94%;
+    --popover:              220 15% 12%;
+    --popover-foreground:    60  5% 94%;
+    --primary:              210 80% 52%;
+    --primary-foreground:     0  0%  4%;
+    --secondary:            220 12% 14%;
+    --secondary-foreground:  60  5% 94%;
+    --muted:                220 12% 14%;
+    --muted-foreground:     220 10% 52%;
+    --accent:                38 75% 52%;
+    --accent-foreground:      0  0%  4%;
+    --destructive:            0 62% 40%;
+    --destructive-foreground: 60  5% 94%;
+    --border:               220 12% 18%;
+    --input:                220 12% 18%;
+    --ring:                 210 80% 52%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+  html { color-scheme: dark; }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
+  }
+}
+
+@layer utilities {
+  .gradient-text {
+    background-image: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .hide-scrollbar::-webkit-scrollbar { display: none; }
+
+  /**
+   * cinema-page-bg
+   * ─────────────────────────────────────────────────────────────────────────
+   * Base background color only — the actual visual atmosphere comes from
+   * the fixed blurred backdrop image layer in HomePage (managed by JS).
+   * Keeping only the base color here avoids double-painting over the blur.
+   * ─────────────────────────────────────────────────────────────────────────
+   */
+  .cinema-page-bg {
+    background-color: hsl(var(--theme-nb));
+    /* backgroundImage is written entirely by the rAF scroll handler in JS */
+  }
+}
+
+/* ── Reduced-motion: disable palette transitions ─────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .cinema-page-bg { transition: none; }
+}
+

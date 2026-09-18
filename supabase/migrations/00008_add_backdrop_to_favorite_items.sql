@@ -1,0 +1,1 @@
+ALTER TABLE favorite_items ADD COLUMN IF NOT EXISTS backdrop_path TEXT DEFAULT NULL;

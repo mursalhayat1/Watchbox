@@ -1,0 +1,21 @@
+{
+  "issuer": "https://jkjjpkvckbegcckadbxs.supabase.co/functions/v1/well-known-oauth",
+  "authorization_endpoint": "https://jkjjpkvckbegcckadbxs.supabase.co/functions/v1/oauth-authorize",
+  "token_endpoint": "https://jkjjpkvckbegcckadbxs.supabase.co/functions/v1/oauth-token",
+  "userinfo_endpoint": "https://jkjjpkvckbegcckadbxs.supabase.co/functions/v1/oauth-userinfo",
+  "revocation_endpoint": "https://jkjjpkvckbegcckadbxs.supabase.co/functions/v1/oauth-token",
+  "code_challenge_methods_supported": ["S256"],
+  "response_types_supported": ["code"],
+  "grant_types_supported": ["authorization_code", "refresh_token"],
+  "token_endpoint_auth_methods_supported": [
+    "client_secret_post",
+    "client_secret_basic",
+    "none"
+  ],
+  "scopes_supported": ["read", "write"],
+  "require_pkce": true,
+  "subject_types_supported": ["public"],
+  "claims_supported": ["sub", "name", "username", "picture"],
+  "service_documentation": "https://app-eb909nta4u81.miaoda.app/mcp-connect",
+  "ui_locales_supported": ["en"]
+}

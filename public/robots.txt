@@ -1,0 +1,22 @@
+User-agent: *
+Allow: /
+Allow: /detail/
+Allow: /person/
+Allow: /discover
+Allow: /for-you
+Allow: /search
+
+# Private user areas — do not index
+Disallow: /library
+Disallow: /stats
+Disallow: /onboarding
+Disallow: /auth/
+Disallow: /login
+Disallow: /admin/
+
+# Prevent low-value filter/pagination URLs from being indexed
+Disallow: /*?*page=
+Disallow: /*?*sort=
+Disallow: /*?*filter=
+
+Sitemap: https://watchbox.app/sitemap.xml
