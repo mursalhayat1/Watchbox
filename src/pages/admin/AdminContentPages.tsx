@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, ExternalLink } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';

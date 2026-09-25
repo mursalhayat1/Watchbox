@@ -7,7 +7,7 @@ import {
   PieChart, Pie, Cell, Legend,
 } from 'recharts';
 import {
-  UserCircle2, LogOut, Film, Tv, Star,
+  UserCircle2, LogOut, Film, Tv,
   BookOpen, Eye, CheckCircle2, Clock3, PauseCircle, XCircle,
   TrendingUp,
 } from 'lucide-react';
@@ -187,13 +187,6 @@ export default function StatsPage() {
     items.forEach(it => { m[it.status] = (m[it.status] ?? 0) + 1; });
     return m;
   }, [items]);
-
-  const genreMap = useMemo(() => {
-    // We don't store genres on library items; use title as proxy label for now.
-    // If TMDB genre data is added to library rows later this will auto-populate.
-    return {} as Record<string, number>;
-  }, []);
-  const _ = genreMap; // suppress unused warning
 
   const ratingBuckets = useMemo(() => {
     const buckets: Record<string, number> = {

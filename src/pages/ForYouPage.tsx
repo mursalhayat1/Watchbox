@@ -18,7 +18,7 @@ import {
 } from '@/services/tmdb';
 import { getFavorites, type FavoriteItem } from '@/lib/supabase/favorites';
 import PageMeta from '@/components/common/PageMeta';
-import { generateStaticMetadata, noindexMetadata } from '@/lib/seo';
+import { noindexMetadata } from '@/lib/seo';
 import { useLibrarySet, excludeLibrary, type LibrarySet } from '@/hooks/useLibrarySet';
 
 // ── Convert FavoriteItem → Movie shape ────────────────────────────────────────

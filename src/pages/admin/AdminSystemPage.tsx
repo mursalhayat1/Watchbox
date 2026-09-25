@@ -6,7 +6,6 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { supabase } from '@/lib/supabase/client';
-import { toast } from 'sonner';
 
 interface ServiceStatus {
   name: string;

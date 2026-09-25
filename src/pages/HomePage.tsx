@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart } from 'lucide-react';
 import Navbar from '@/components/layouts/Navbar';

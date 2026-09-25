@@ -24,6 +24,7 @@ import {
 } from 'video-react';
 import 'video-react/dist/video-react.css';
 import './video.css';
+import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
 interface VideoProps {
@@ -52,9 +53,21 @@ export default function Video({
     controls = true,
     aspectRatio = 'auto'
 }: VideoProps) {
+    const [playerInstance, setPlayerInstance] = useState<any>(null);
+    const fullscreenToggleProps = playerInstance
+        ? {
+            actions: playerInstance.actions,
+            player: playerInstance.getState().player,
+        }
+        : {
+            actions: { toggleFullscreen: () => undefined },
+            player: { isFullscreen: false },
+        };
+
     return (
         <div className={cn('min-w-[100px]', className)} custom-component="video">
             <Player
+                ref={(node) => setPlayerInstance(node)}
                 poster={poster}
                 src={src}
                 autoPlay={autoPlay}
@@ -72,7 +85,7 @@ export default function Video({
                     <TimeDivider key="time-divider" />
                     <DurationDisplay key="duration-display" />
                     <ProgressControl key="progress-control" />
-                    <FullscreenToggle key="fullscreen-toggle" />
+                    <FullscreenToggle key="fullscreen-toggle" {...fullscreenToggleProps} />
                 </ControlBar>
                 <BigPlayButton position="center" />
             </Player>

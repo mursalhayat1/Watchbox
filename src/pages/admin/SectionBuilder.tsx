@@ -10,7 +10,7 @@ import { z } from 'zod';
 import {
   ChevronLeft, ChevronRight, Save, Eye, Zap, BookOpen, Layers,
   Info, ListFilter, ArrowUpDown, Hand, Layout, Calendar, Rocket,
-  Plus, X, GripVertical, Search, Loader2, Check,
+  X, GripVertical, Search, Loader2, Check,
 } from 'lucide-react';
 import {
   DndContext, closestCenter, PointerSensor, KeyboardSensor,
@@ -27,7 +27,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -266,14 +265,13 @@ function GenrePicker({
 
 // ── Language/Country picker ───────────────────────────────────────────────────
 function ListPicker<T extends string>({
-  all, included, excluded, onInclude, onExclude, onRemove, renderName,
+  all, included, excluded, onInclude, onExclude, onRemove,
 }: {
   all: { code: T; name: string }[];
   included: T[]; excluded: T[];
   onInclude: (v: T) => void;
   onExclude: (v: T) => void;
   onRemove:  (v: T) => void;
-  renderName: (v: T) => string;
 }) {
   return (
     <div className="flex flex-wrap gap-1.5">
@@ -531,7 +529,6 @@ export default function SectionBuilder({ mode }: SectionBuilderProps) {
 
   // Local keywords state
   const [kwIncludeNames, setKwIncludeNames] = useState<Map<number, string>>(new Map());
-  const [kwExcludeNames, setKwExcludeNames] = useState<Map<number, string>>(new Map());
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -542,7 +539,6 @@ export default function SectionBuilder({ mode }: SectionBuilderProps) {
   const watchContentType  = watch('content_type');
   const watchSortBy       = watch('sort_by');
   const watchStatus       = watch('status');
-  const watchItemLimit    = watch('item_limit');
 
   // ── Load existing section ─────────────────────────────────────────────────
   useEffect(() => {
@@ -1006,7 +1002,6 @@ export default function SectionBuilder({ mode }: SectionBuilderProps) {
                     onInclude={v => setFilters(prev => ({ ...prev, languages: { include: [...(prev.languages?.include ?? []), v], exclude: prev.languages?.exclude ?? [] } }))}
                     onExclude={v => setFilters(prev => ({ ...prev, languages: { include: prev.languages?.include ?? [], exclude: [...(prev.languages?.exclude ?? []), v] } }))}
                     onRemove={v => setFilters(prev => ({ ...prev, languages: { include: (prev.languages?.include ?? []).filter(x => x !== v), exclude: (prev.languages?.exclude ?? []).filter(x => x !== v) } }))}
-                    renderName={v => LANGUAGES.find(l => l.code === v)?.name ?? v}
                   />
                 </CardContent>
               </Card>
@@ -1022,7 +1017,6 @@ export default function SectionBuilder({ mode }: SectionBuilderProps) {
                     onInclude={v => setFilters(prev => ({ ...prev, countries: { include: [...(prev.countries?.include ?? []), v], exclude: prev.countries?.exclude ?? [] } }))}
                     onExclude={v => setFilters(prev => ({ ...prev, countries: { include: prev.countries?.include ?? [], exclude: [...(prev.countries?.exclude ?? []), v] } }))}
                     onRemove={v => setFilters(prev => ({ ...prev, countries: { include: (prev.countries?.include ?? []).filter(x => x !== v), exclude: (prev.countries?.exclude ?? []).filter(x => x !== v) } }))}
-                    renderName={v => COUNTRIES.find(c => c.code === v)?.name ?? v}
                   />
                 </CardContent>
               </Card>

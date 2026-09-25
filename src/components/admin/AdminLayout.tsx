@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Film, Tv2, User2, Database, BarChart3,
-  Activity, Settings, FileText, ShieldCheck, Menu, X, LogOut,
+  Activity, Settings, FileText, ShieldCheck, Menu, LogOut,
   ChevronRight, Clapperboard, LayoutList,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';

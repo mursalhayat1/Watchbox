@@ -8,7 +8,7 @@ import { useMovieSearch } from '@/hooks/useTMDB';
 import { tmdbImageUrl } from '@/services/tmdb';
 import type { Movie } from '@/services/tmdb';
 import { GlassButton, GlassIconButton, GlassFilterDef } from '@/components/ui/liquid-glass';
-import { useAuth, getAvatarUrl, getDisplayName, getAuthProvider, hasProviderAvatar, getNameInitial } from '@/contexts/AuthContext';
+import { useAuth, getAvatarUrl, getDisplayName, hasProviderAvatar, getNameInitial } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 // ── Profile avatar / initial badge (shared between mobile + desktop) ─────────

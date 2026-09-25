@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Play, CheckCircle2, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getTVSeason, tmdbImageUrl, type TvEpisode } from '@/services/tmdb';
 import { getShowProgress, markEpisodeWatched, type EpisodeProgress } from '@/lib/supabase/episodeProgress';
-import { markEpisodeWatchedLocal, isEpisodeWatchedLocal } from '@/hooks/usePlaybackProgress';
+import { isEpisodeWatchedLocal } from '@/hooks/usePlaybackProgress';
 import { useAuth } from '@/contexts/AuthContext';
 import { GlassIconButton } from '@/components/ui/liquid-glass';
 
