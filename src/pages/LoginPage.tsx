@@ -51,6 +51,14 @@ export default function LoginPage() {
     }
   };
 
+  const handleGoogle = async () => {
+    try {
+      await signInWithGoogle();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Google sign-in failed');
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 relative overflow-hidden"
       style={{ background: 'hsl(189,80%,4%)' }}>
@@ -107,7 +115,7 @@ export default function LoginPage() {
 
           {/* OAuth */}
           <div className="flex flex-col gap-3 mb-5">
-            <button onClick={() => signInWithGoogle()}
+            <button onClick={handleGoogle}
               className="flex items-center justify-center gap-3 w-full py-3 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-85 active:scale-[0.98]"
               style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.14)' }}>
               <Chrome className="w-4 h-4" />

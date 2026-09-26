@@ -111,11 +111,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signInWithGoogle = async () => {
-    const { data } = await supabase.auth.signInWithSSO({
-      domain: 'miaoda-gg.com',
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
       options: { redirectTo: `${window.location.origin}/auth/callback` },
     });
-    if (data?.url) window.open(data.url, '_self');
+    if (error) throw error;
   };
 
   const signInWithDiscord = async () => {
