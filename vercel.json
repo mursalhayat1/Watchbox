@@ -27,7 +27,7 @@
       "destination": "/api/runtime-config"
     },
     {
-      "source": "/((?!api/|mcp/?$|\\.well-known/|_app/).*)",
+      "source": "/((?!api/|mcp/?$|\\.well-known/|_app/|assets/).*)",
       "destination": "/index.html"
     }
   ]

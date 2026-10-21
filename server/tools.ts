@@ -428,7 +428,14 @@ export function createWatchboxMcpServer(
       duration_secs: z.number().int().min(0).max(86_400_000).optional(),
     }).strict(), async (args) => {
       if (args.watched === undefined && args.position_secs === undefined && args.duration_secs === undefined) throw new ToolFailure('Provide watched, position_secs, or duration_secs.');
-      return { item: await repo.updateEpisodeProgress(auth.userId, args) };
+      return { item: await repo.updateEpisodeProgress(auth.userId, {
+        tv_id: args.tv_id,
+        season_number: args.season_number,
+        episode_number: args.episode_number,
+        watched: args.watched,
+        position_secs: args.position_secs,
+        duration_secs: args.duration_secs,
+      }) };
     });
 
     // 14. manage_favorites
@@ -518,7 +525,14 @@ export function createWatchboxMcpServer(
       duration_secs: z.number().int().min(0).max(86_400_000).optional(),
     }).strict(), async (args) => {
       if (args.watched === undefined && args.position_secs === undefined && args.duration_secs === undefined) throw new ToolFailure('Provide watched, position_secs, or duration_secs.');
-      return { item: await repo.updateEpisodeProgress(auth.userId, args) };
+      return { item: await repo.updateEpisodeProgress(auth.userId, {
+        tv_id: args.tv_id,
+        season_number: args.season_number,
+        episode_number: args.episode_number,
+        watched: args.watched,
+        position_secs: args.position_secs,
+        duration_secs: args.duration_secs,
+      }) };
     });
   }
 
