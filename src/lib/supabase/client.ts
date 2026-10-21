@@ -1,8 +1,23 @@
 import { createClient } from '@supabase/supabase-js';
 
-const url = import.meta.env.VITE_SUPABASE_URL as string;
-// Supabase JS client requires the JWT anon key (eyJ… format), not the publishable key
-const key = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+const url = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.trim();
+// New Supabase projects expose the publishable key; keep the legacy anon key as a fallback.
+const key = (
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined
+  ?? import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
+)?.trim();
+
+if (!url) {
+  throw new Error(
+    'Supabase is not configured: VITE_SUPABASE_URL is missing from the Vite environment.',
+  );
+}
+
+if (!key) {
+  throw new Error(
+    'Supabase is not configured: VITE_SUPABASE_PUBLISHABLE_KEY or VITE_SUPABASE_ANON_KEY is missing from the Vite environment.',
+  );
+}
 
 // Persistent browser session ID — identifies the user without Auth
 function getSessionId(): string {
