@@ -8,14 +8,13 @@
  */
 
 import type { MovieDetails, PersonDetails } from '@/services/tmdb';
+import { publicRuntimeConfig } from '@/lib/runtime-config';
 
 // ── Site constants ─────────────────────────────────────────────────────────────
 export const SITE_NAME = 'WatchBox';
 export const SITE_DESCRIPTION =
   'Discover, track, and organise movies and TV shows you love. Explore trending titles, browse by genre, and build your personal watchlist on WatchBox.';
-export const SITE_URL =
-  (import.meta.env.VITE_SITE_URL as string | undefined)?.replace(/\/$/, '') ??
-  (import.meta.env.PROD ? 'https://watchbox.app' : 'http://localhost:5173');
+export const SITE_URL = publicRuntimeConfig.siteUrl ?? '';
 
 /** Absolute fallback OG image (served from /public) */
 export const FALLBACK_OG_IMAGE = `${SITE_URL}/images/og-fallback.jpg`;

@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import AdminLayout from '@/components/admin/AdminLayout';
+import { publicRuntimeConfig } from '@/lib/runtime-config';
 
 interface SettingRow {
   label: string;
@@ -41,10 +42,10 @@ function SettingsSection({ title, description, rows }: { title: string; descript
 }
 
 export default function AdminSettingsPage() {
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string ?? '';
-  const siteUrl     = import.meta.env.VITE_SITE_URL as string ?? window.location.origin;
-  const appId       = import.meta.env.VITE_APP_ID as string ?? '—';
-  const tmdbKey     = import.meta.env.VITE_TMDB_API_KEY as string ?? '';
+  const supabaseUrl = publicRuntimeConfig.supabaseUrl ?? '';
+  const siteUrl     = publicRuntimeConfig.siteUrl ?? window.location.origin;
+  const appId       = publicRuntimeConfig.appId ?? '—';
+  const tmdbKey     = publicRuntimeConfig.tmdbApiKey ?? '';
 
   return (
     <AdminLayout title="Settings" breadcrumbs={[{ label: 'Settings' }]}>

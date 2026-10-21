@@ -907,3 +907,8 @@ Instead of simply being another movie database, the long-term vision is to build
 ---
 
 **Built with ❤️ by Mursal Hayat**
+
+
+## Current Watchbox stack and Manus MCP deployment
+
+The current source is a React/Vite/TypeScript application with pnpm, Supabase Auth/Postgres, TMDB, and a separate official-SDK Streamable HTTP MCP server. The project-level [`opencode.json`](opencode.json) connects that server to OpenCode; see the OpenCode section in [docs/MCP_SETUP.md](docs/MCP_SETUP.md#opencode) for the one-time Supabase OAuth client setup. See [docs/mcp-server.md](docs/mcp-server.md) for actual setup, local test/Inspector instructions, protected runtime configuration, OAuth/client onboarding, Manus hosting routes, and release blockers. See [docs/mcp-auth-references.md](docs/mcp-auth-references.md) for official OAuth references and the reviewed RLS policy issue.

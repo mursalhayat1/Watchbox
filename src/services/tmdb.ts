@@ -1,3 +1,5 @@
+import { publicRuntimeConfig } from '@/lib/runtime-config';
+
 const BASE_URL = 'https://api.themoviedb.org/3';
 const IMG_BASE = 'https://image.tmdb.org/t/p';
 
@@ -14,7 +16,7 @@ export const tmdbProviderLogoUrl = (path: string | null) =>
 export const tmdbLogoUrl = (path: string | null) =>
   tmdbImageUrl(path, 'w500');
 
-const getApiKey = () => import.meta.env.VITE_TMDB_API_KEY as string | undefined;
+const getApiKey = () => publicRuntimeConfig.tmdbApiKey ?? undefined;
 
 export async function tmdbFetch<T>(endpoint: string, params: Record<string, string> = {}): Promise<T> {
   const apiKey = getApiKey();

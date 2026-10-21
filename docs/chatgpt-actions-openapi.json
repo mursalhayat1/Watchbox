@@ -1,0 +1,397 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Watchbox API for ChatGPT",
+    "version": "1.0.0",
+    "description": "Watchbox integration API for ChatGPT Custom GPT Actions. Allows searching movies/TV, checking watchlists, logging watch history, rating titles, managing favorites, and tracking viewing progress."
+  },
+  "servers": [
+    {
+      "url": "https://your-watchbox-url.com",
+      "description": "Watchbox Production Server (replace with your published URL)"
+    }
+  ],
+  "security": [
+    {
+      "BearerAuth": []
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Your Supabase access token (JWT)"
+      }
+    }
+  },
+  "paths": {
+    "/api/actions/search_titles": {
+      "post": {
+        "operationId": "searchTitles",
+        "summary": "Search titles in the user library or TMDB",
+        "description": "Search the user's library by title, watch status, genre, release year, or rating. Optionally search TMDB directly.",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "query": { "type": "string", "description": "Partial title search query" },
+                  "media_type": { "type": "string", "enum": ["movie", "tv"], "description": "Filter by movie or tv" },
+                  "status": { "type": "string", "enum": ["Watching", "Completed", "Plan to Watch", "On Hold", "Dropped"], "description": "Filter by watch status" },
+                  "min_rating": { "type": "number", "minimum": 0, "maximum": 10, "description": "Minimum user rating (0-10)" },
+                  "max_rating": { "type": "number", "minimum": 0, "maximum": 10, "description": "Maximum user rating (0-10)" },
+                  "release_year": { "type": "integer", "description": "Filter by release year (e.g. 2023)" },
+                  "include_discover": { "type": "boolean", "default": false, "description": "Also discover new matches from TMDB" },
+                  "limit": { "type": "integer", "default": 20, "description": "Max number of items to return" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "List of matching titles" }
+        }
+      }
+    },
+    "/api/actions/get_title_details": {
+      "post": {
+        "operationId": "getTitleDetails",
+        "summary": "Get details for a movie or TV show",
+        "description": "Retrieves TMDB metadata along with the user's personal tracking status, rating, notes, and progress.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["tmdb_id", "media_type"],
+                "properties": {
+                  "tmdb_id": { "type": "integer", "description": "TMDB ID of the title" },
+                  "media_type": { "type": "string", "enum": ["movie", "tv"], "description": "Media type ('movie' or 'tv')" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Complete title details and user tracking state" }
+        }
+      }
+    },
+    "/api/actions/get_watchlist": {
+      "post": {
+        "operationId": "getWatchlist",
+        "summary": "Retrieve user's watchlist",
+        "description": "Returns items currently on the user's watchlist ('Plan to Watch').",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "media_type": { "type": "string", "enum": ["movie", "tv"], "description": "Filter by movie or tv" },
+                  "limit": { "type": "integer", "default": 50, "description": "Max results" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Watchlist items" }
+        }
+      }
+    },
+    "/api/actions/get_watch_history": {
+      "post": {
+        "operationId": "getWatchHistory",
+        "summary": "Retrieve watch history",
+        "description": "Returns completed, watching, dropped, or on-hold titles from the user's library.",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": { "type": "string", "enum": ["Completed", "Watching", "Dropped", "On Hold"] },
+                  "media_type": { "type": "string", "enum": ["movie", "tv"] },
+                  "sort_by": { "type": "string", "enum": ["updated_at", "added_at", "user_rating", "title"], "default": "updated_at" },
+                  "limit": { "type": "integer", "default": 50 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Watch history items" }
+        }
+      }
+    },
+    "/api/actions/get_library_stats": {
+      "post": {
+        "operationId": "getLibraryStats",
+        "summary": "Get aggregate library statistics",
+        "description": "Returns counts for completed, watching, planned, dropped, on-hold titles, movies vs TV count, and average rating.",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": { "type": "object" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "User statistics" }
+        }
+      }
+    },
+    "/api/actions/get_favorites": {
+      "post": {
+        "operationId": "getFavorites",
+        "summary": "Get favorite titles and actors",
+        "description": "Returns the user's favorite movies, TV series, and optionally favorite actors.",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "media_type": { "type": "string", "enum": ["movie", "tv"] },
+                  "include_actors": { "type": "boolean", "default": true },
+                  "limit": { "type": "integer", "default": 50 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Favorites" }
+        }
+      }
+    },
+    "/api/actions/get_viewing_progress": {
+      "post": {
+        "operationId": "getViewingProgress",
+        "summary": "Get TV episode viewing progress",
+        "description": "Returns episode watch status and timestamp progress for TV shows.",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "tv_id": { "type": "integer", "description": "TMDB TV show ID" },
+                  "limit": { "type": "integer", "default": 50 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Episode progress" }
+        }
+      }
+    },
+    "/api/actions/add_to_watchlist": {
+      "post": {
+        "operationId": "addToWatchlist",
+        "summary": "Add a title to the watchlist",
+        "description": "Adds a movie or TV show to the user's watchlist.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["tmdb_id", "media_type", "title"],
+                "properties": {
+                  "tmdb_id": { "type": "integer" },
+                  "media_type": { "type": "string", "enum": ["movie", "tv"] },
+                  "title": { "type": "string" },
+                  "poster_path": { "type": "string", "nullable": true },
+                  "vote_average": { "type": "number", "nullable": true },
+                  "release_date": { "type": "string", "nullable": true }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Added to watchlist" }
+        }
+      }
+    },
+    "/api/actions/remove_from_watchlist": {
+      "post": {
+        "operationId": "removeFromWatchlist",
+        "summary": "Remove a title from the watchlist",
+        "description": "Removes a title from the user's watchlist. Requires confirm_remove: true.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["tmdb_id", "media_type", "confirm_remove"],
+                "properties": {
+                  "tmdb_id": { "type": "integer" },
+                  "media_type": { "type": "string", "enum": ["movie", "tv"] },
+                  "confirm_remove": { "type": "boolean", "enum": [true], "description": "Must be true to confirm removal" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Removed from watchlist" }
+        }
+      }
+    },
+    "/api/actions/update_watch_status": {
+      "post": {
+        "operationId": "updateWatchStatus",
+        "summary": "Update title watch status",
+        "description": "Updates status to Watching, Completed, Plan to Watch, On Hold, or Dropped.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["tmdb_id", "media_type", "status"],
+                "properties": {
+                  "tmdb_id": { "type": "integer" },
+                  "media_type": { "type": "string", "enum": ["movie", "tv"] },
+                  "status": { "type": "string", "enum": ["Watching", "Completed", "Plan to Watch", "On Hold", "Dropped"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Status updated" }
+        }
+      }
+    },
+    "/api/actions/update_rating": {
+      "post": {
+        "operationId": "updateRating",
+        "summary": "Set or update personal rating",
+        "description": "Sets user rating from 0.0 to 10.0 (one decimal place). Pass null to clear rating.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["tmdb_id", "media_type", "rating"],
+                "properties": {
+                  "tmdb_id": { "type": "integer" },
+                  "media_type": { "type": "string", "enum": ["movie", "tv"] },
+                  "rating": { "type": "number", "minimum": 0, "maximum": 10, "nullable": true, "description": "Rating (0.0 - 10.0) or null to clear" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Rating updated" }
+        }
+      }
+    },
+    "/api/actions/update_notes": {
+      "post": {
+        "operationId": "updateNotes",
+        "summary": "Update personal notes",
+        "description": "Creates or updates notes for a title in your library. Pass null to clear notes.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["tmdb_id", "media_type", "notes"],
+                "properties": {
+                  "tmdb_id": { "type": "integer" },
+                  "media_type": { "type": "string", "enum": ["movie", "tv"] },
+                  "notes": { "type": "string", "maxLength": 5000, "nullable": true, "description": "Note text or null to clear" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Notes updated" }
+        }
+      }
+    },
+    "/api/actions/update_progress": {
+      "post": {
+        "operationId": "updateProgress",
+        "summary": "Update episode playback progress",
+        "description": "Logs season, episode, playback position in seconds, and watched status.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["tv_id", "season_number", "episode_number"],
+                "properties": {
+                  "tv_id": { "type": "integer" },
+                  "season_number": { "type": "integer", "minimum": 0 },
+                  "episode_number": { "type": "integer", "minimum": 0 },
+                  "watched": { "type": "boolean", "nullable": true },
+                  "position_secs": { "type": "integer", "minimum": 0, "nullable": true },
+                  "duration_secs": { "type": "integer", "minimum": 0, "nullable": true }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Progress updated" }
+        }
+      }
+    },
+    "/api/actions/manage_favorites": {
+      "post": {
+        "operationId": "manageFavorites",
+        "summary": "Add or remove favorites",
+        "description": "Adds or removes a title or actor from the user's favorites.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["action"],
+                "properties": {
+                  "action": { "type": "string", "enum": ["add", "remove"] },
+                  "target_type": { "type": "string", "enum": ["title", "actor"], "default": "title" },
+                  "tmdb_id": { "type": "integer", "nullable": true },
+                  "media_type": { "type": "string", "enum": ["movie", "tv"], "nullable": true },
+                  "title": { "type": "string", "nullable": true },
+                  "poster_path": { "type": "string", "nullable": true },
+                  "person_id": { "type": "integer", "nullable": true },
+                  "person_name": { "type": "string", "nullable": true },
+                  "profile_path": { "type": "string", "nullable": true }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Favorite updated" }
+        }
+      }
+    }
+  }
+}

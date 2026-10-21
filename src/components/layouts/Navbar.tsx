@@ -302,6 +302,14 @@ function ProfileDropdown({ onClose }: { onClose: () => void }) {
       {/* Menu items */}
       <div className="py-1.5">
         <Link
+          to="/oauth/consent"
+          onClick={onClose}
+          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-cyan-300 hover:text-cyan-200 hover:bg-white/[0.07] transition-colors"
+        >
+          <Sparkles className="w-4 h-4 shrink-0 text-cyan-400" />
+          Connect AI / Claude
+        </Link>
+        <Link
           to="/stats"
           onClick={onClose}
           className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-white/70 hover:text-white hover:bg-white/[0.07] transition-colors"

@@ -10,6 +10,7 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+dist-server
 output
 *.local
 package-lock.json
@@ -34,6 +35,7 @@ history/*.json
 /tasks
 .native-wind-cache
 .vite
+/.work/
 .env
 .env.local
 .env.*.local

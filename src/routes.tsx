@@ -12,6 +12,7 @@ const PersonPage        = lazy(() => import('./pages/PersonPage'));
 const LibraryPage       = lazy(() => import('./pages/LibraryPage'));
 const LoginPage         = lazy(() => import('./pages/LoginPage'));
 const AuthCallbackPage  = lazy(() => import('./pages/AuthCallbackPage'));
+const OAuthConsentPage  = lazy(() => import('./pages/OAuthConsentPage'));
 const StatsPage         = lazy(() => import('./pages/StatsPage'));
 const OnboardingPage    = lazy(() => import('./pages/OnboardingPage'));
 
@@ -78,6 +79,7 @@ export const routes: RouteConfig[] = [
   { name: 'Search',       path: '/search',           element: <Page><SearchPage /></Page>,        public: true },
   { name: 'Login',        path: '/login',            element: <Page><LoginPage /></Page>,         public: true },
   { name: 'AuthCallback', path: '/auth/callback',    element: <Page><AuthCallbackPage /></Page>,  public: true },
+  { name: 'OAuthConsent', path: '/oauth/consent',      element: <Page><OAuthConsentPage /></Page>,  public: true },
   { name: 'Onboarding',   path: '/onboarding',       element: <Page><OnboardingPage /></Page>,    public: true },
   { name: 'Stats',        path: '/stats',            element: <Page><StatsPage /></Page>,         public: true },
   // Legacy redirects

@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { supabase } from '@/db/supabase';
 import type { User } from '@supabase/supabase-js';
+import { authCallbackUrl } from '@/lib/safe-return-path';
 
 export interface Profile {
   id: string;
@@ -60,10 +61,10 @@ interface AuthContextType {
   user: User | null;
   profile: Profile | null;
   loading: boolean;
-  signInWithGoogle: () => Promise<void>;
-  signInWithDiscord: () => Promise<void>;
+  signInWithGoogle: (returnTo?: string) => Promise<void>;
+  signInWithDiscord: (returnTo?: string) => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signUpWithEmail: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signUpWithEmail: (email: string, password: string, returnTo?: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -110,19 +111,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async (returnTo?: string) => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: { redirectTo: authCallbackUrl(returnTo) },
     });
     if (error) throw error;
   };
 
-  const signInWithDiscord = async () => {
-    await supabase.auth.signInWithOAuth({
+  const signInWithDiscord = async (returnTo?: string) => {
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: 'discord',
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: { redirectTo: authCallbackUrl(returnTo) },
     });
+    if (error) throw error;
   };
 
   const signInWithEmail = async (email: string, password: string) => {
@@ -130,10 +132,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error as Error | null };
   };
 
-  const signUpWithEmail = async (email: string, password: string) => {
+  const signUpWithEmail = async (email: string, password: string, returnTo?: string) => {
     const { error } = await supabase.auth.signUp({
       email, password,
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+      options: { emailRedirectTo: authCallbackUrl(returnTo) },
     });
     return { error: error as Error | null };
   };
@@ -161,4 +163,3 @@ export function useAuth() {
   if (!ctx) throw new Error('useAuth must be used within AuthProvider');
   return ctx;
 }
-

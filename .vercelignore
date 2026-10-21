@@ -1,0 +1,2 @@
+# This local Vite sentinel would shadow the serverless runtime-config endpoint.
+public/api/runtime-config.js

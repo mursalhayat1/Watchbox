@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Mail, Eye, EyeOff, Clapperboard, Chrome } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
@@ -7,6 +7,7 @@ import Silk from '@/components/ui/Silk';
 import { GlassFilterDef } from '@/components/ui/liquid-glass';
 import PageMeta from '@/components/common/PageMeta';
 import { noindexMetadata } from '@/lib/seo';
+import { safeAppPath } from '@/lib/safe-return-path';
 
 function DiscordIcon({ className }: { className?: string }) {
   return (
@@ -18,6 +19,8 @@ function DiscordIcon({ className }: { className?: string }) {
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const returnTo = safeAppPath(searchParams.get('next')) ?? '/';
   const { signInWithGoogle, signInWithDiscord, signInWithEmail, signUpWithEmail } = useAuth();
 
   const [tab, setTab]           = useState<'signin' | 'signup'>('signin');
@@ -37,12 +40,12 @@ export default function LoginPage() {
     try {
       const { error } = tab === 'signin'
         ? await signInWithEmail(email, password)
-        : await signUpWithEmail(email, password);
+        : await signUpWithEmail(email, password, returnTo);
       if (error) throw error;
       if (tab === 'signup') {
         toast.success('Check your email to confirm your account!');
       } else {
-        navigate('/');
+        navigate(returnTo);
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Authentication failed');
@@ -53,9 +56,17 @@ export default function LoginPage() {
 
   const handleGoogle = async () => {
     try {
-      await signInWithGoogle();
+      await signInWithGoogle(returnTo);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Google sign-in failed');
+    }
+  };
+
+  const handleDiscord = async () => {
+    try {
+      await signInWithDiscord(returnTo);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Discord sign-in failed');
     }
   };
 
@@ -121,7 +132,7 @@ export default function LoginPage() {
               <Chrome className="w-4 h-4" />
               Continue with Google
             </button>
-            <button onClick={() => signInWithDiscord()}
+            <button onClick={handleDiscord}
               className="flex items-center justify-center gap-3 w-full py-3 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-85 active:scale-[0.98]"
               style={{ background: 'rgba(88,101,242,0.20)', border: '1px solid rgba(88,101,242,0.40)' }}>
               <DiscordIcon className="w-4 h-4" />

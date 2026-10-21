@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { supabase } from '@/lib/supabase/client';
+import { publicRuntimeConfig } from '@/lib/runtime-config';
 
 interface ServiceStatus {
   name: string;
@@ -15,7 +16,7 @@ interface ServiceStatus {
   detail?: string;
 }
 
-const TMDB_API_KEY = import.meta.env.VITE_TMDB_API_KEY as string;
+const TMDB_API_KEY = publicRuntimeConfig.tmdbApiKey ?? '';
 
 async function checkService(name: string, checkFn: () => Promise<void>): Promise<ServiceStatus> {
   const start = Date.now();
@@ -49,7 +50,8 @@ export default function AdminSystemPage() {
         if (error) throw error;
       }),
       checkService('TMDB API', async () => {
-        const res = await fetch(`https://api.themoviedb.org/3/configuration?api_key=${TMDB_API_KEY}`);
+        if (!TMDB_API_KEY) throw new Error('TMDB API key not configured');
+        const res = await fetch(`https://api.themoviedb.org/3/configuration?api_key=${encodeURIComponent(TMDB_API_KEY)}`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
       }),
     ]);
@@ -152,10 +154,10 @@ export default function AdminSystemPage() {
         <CardContent className="pt-0">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-y-2 gap-x-8 text-sm">
             {[
-              { label: 'App ID',          value: import.meta.env.VITE_APP_ID ?? '—' },
-              { label: 'Supabase URL',    value: (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.replace(/^https?:\/\//, '').slice(0, 32) + '…' || '—' },
+              { label: 'App ID',          value: publicRuntimeConfig.appId ?? '—' },
+              { label: 'Supabase URL',    value: (publicRuntimeConfig.supabaseUrl ?? '').replace(/^https?:\/\//, '').slice(0, 32) + '…' || '—' },
               { label: 'TMDB API',        value: TMDB_API_KEY ? '✓ Configured' : '✗ Missing' },
-              { label: 'Site URL',        value: import.meta.env.VITE_SITE_URL ?? window.location.origin },
+              { label: 'Site URL',        value: publicRuntimeConfig.siteUrl ?? window.location.origin },
               { label: 'Build mode',      value: import.meta.env.MODE },
               { label: 'React version',   value: '18.x' },
             ].map(({ label, value }) => (

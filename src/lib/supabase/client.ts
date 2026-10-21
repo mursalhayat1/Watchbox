@@ -1,8 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
+import { publicRuntimeConfig } from '@/lib/runtime-config';
 
-const url = import.meta.env.VITE_SUPABASE_URL as string;
-// Supabase JS client requires the JWT anon key (eyJ… format), not the publishable key
-const key = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+const url = publicRuntimeConfig.supabaseUrl;
+// Supabase JS client requires the browser-safe JWT anon key, never the service-role key.
+const key = publicRuntimeConfig.supabaseAnonKey;
+if (!url || !key) {
+  throw new Error('Watchbox is not configured. Add the existing Supabase URL and anon key to the deployment runtime.');
+}
 
 // Persistent browser session ID — identifies the user without Auth
 function getSessionId(): string {

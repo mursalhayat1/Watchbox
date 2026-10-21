@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/db/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import PageMeta from '@/components/common/PageMeta';
 import { noindexMetadata } from '@/lib/seo';
+import { loginUrlFor, safeAppPath } from '@/lib/safe-return-path';
 
 // Handles the OAuth redirect from Supabase (Google / Discord)
 // URL pattern: /auth/callback#access_token=...
 export default function AuthCallbackPage() {
   const navigate   = useNavigate();
+  const [searchParams] = useSearchParams();
+  const returnTo = safeAppPath(searchParams.get('next'));
   const { profile, loading, refreshProfile } = useAuth();
   const [done, setDone] = useState(false);
 
@@ -20,7 +23,7 @@ export default function AuthCallbackPage() {
       // Give the auth state listener a moment to settle
       const { data } = await supabase.auth.getSession();
       if (!data.session) {
-        navigate('/login', { replace: true });
+        navigate(loginUrlFor(returnTo), { replace: true });
         return;
       }
       await refreshProfile();
@@ -32,12 +35,16 @@ export default function AuthCallbackPage() {
 
   useEffect(() => {
     if (!done || loading) return;
+    if (returnTo) {
+      navigate(returnTo, { replace: true });
+      return;
+    }
     if (!profile?.onboarded || !profile?.username) {
       navigate('/onboarding', { replace: true });
     } else {
       navigate('/', { replace: true });
     }
-  }, [done, loading, profile, navigate]);
+  }, [done, loading, profile, navigate, returnTo]);
 
   return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: 'hsl(189,80%,4%)' }}>
