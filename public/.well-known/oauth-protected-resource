@@ -1,9 +1,9 @@
 {
-  "resource": "https://jkjjpkvckbegcckadbxs.supabase.co/functions/v1/mcp-server",
+  "resource": "https://watchbox2.vercel.app/mcp",
   "authorization_servers": [
-    "https://jkjjpkvckbegcckadbxs.supabase.co/functions/v1/well-known-oauth"
+    "https://hveckbndlnkokfgzrztn.supabase.co/auth/v1"
   ],
-  "scopes_supported": ["read", "write"],
   "bearer_methods_supported": ["header"],
-  "resource_documentation": "https://app-eb909nta4u81.miaoda.app/mcp-connect"
+  "scopes_supported": ["openid", "profile", "email"],
+  "resource_name": "Watchbox"
 }
