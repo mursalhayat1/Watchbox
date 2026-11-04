@@ -10,8 +10,46 @@ ALTER TABLE favorite_items    ENABLE ROW LEVEL SECURITY;
 ALTER TABLE watchlist_items   ENABLE ROW LEVEL SECURITY;
 ALTER TABLE actor_favorites   ENABLE ROW LEVEL SECURITY;
 ALTER TABLE episode_progress  ENABLE ROW LEVEL SECURITY;
+-- admin_audit_logs is created HERE (guarded) so this migration is runnable on
+-- fresh environments: admin_get_audit_logs/admin_log_action below parse
+-- against it. The production project already has this table (applied by hand)
+-- — the guard simply skips there.
+DO $audit$
+BEGIN
+  IF to_regclass('public.admin_audit_logs') IS NULL THEN
+    CREATE TABLE public.admin_audit_logs (
+      id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      admin_id    uuid NOT NULL REFERENCES auth.users(id) ON DELETE SET NULL,
+      admin_email text,
+      action      text NOT NULL,
+      target_type text,
+      target_id   text,
+      details     jsonb,
+      status      text NOT NULL DEFAULT 'success',
+      created_at  timestamptz NOT NULL DEFAULT now()
+    );
+    CREATE INDEX idx_admin_audit_logs_created
+      ON public.admin_audit_logs (created_at DESC);
+    RAISE NOTICE 'created public.admin_audit_logs';
+  ELSE
+    RAISE NOTICE 'public.admin_audit_logs already exists — skipped';
+  END IF;
+END
+$audit$;
 ALTER TABLE admin_audit_logs  ENABLE ROW LEVEL SECURITY;
-ALTER TABLE home_sections     ENABLE ROW LEVEL SECURITY;
+
+-- home_sections is NOT created anywhere in the repo chain (00016 ships the
+-- dynamic "sections" system instead); skip instead of failing on fresh DBs.
+DO $hs$
+BEGIN
+  IF to_regclass('public.home_sections') IS NOT NULL THEN
+    ALTER TABLE home_sections ENABLE ROW LEVEL SECURITY;
+    RAISE NOTICE 'enabled RLS on public.home_sections';
+  ELSE
+    RAISE NOTICE 'public.home_sections does not exist — RLS enable skipped';
+  END IF;
+END
+$hs$;
 
 -- ── Helper: is the current session an admin? ──────────────────────────────
 -- SECURITY DEFINER so it bypasses RLS on profiles
@@ -132,14 +170,25 @@ CREATE POLICY audit_logs_insert_admin
   WITH CHECK (is_admin());
 
 -- ── home_sections ─────────────────────────────────────────────────────────
-CREATE POLICY home_sections_select_all
-  ON home_sections FOR SELECT
-  USING (true);
+-- Guarded: the repo chain never creates home_sections, so these policies only
+-- apply to databases that already have the table.
+DO $hs$
+BEGIN
+  IF to_regclass('public.home_sections') IS NOT NULL THEN
+    CREATE POLICY home_sections_select_all
+      ON home_sections FOR SELECT
+      USING (true);
 
-CREATE POLICY home_sections_write_admin
-  ON home_sections FOR ALL
-  USING (is_admin())
-  WITH CHECK (is_admin());
+    CREATE POLICY home_sections_write_admin
+      ON home_sections FOR ALL
+      USING (is_admin())
+      WITH CHECK (is_admin());
+    RAISE NOTICE 'created home_sections policies';
+  ELSE
+    RAISE NOTICE 'public.home_sections does not exist — policies skipped';
+  END IF;
+END
+$hs$;
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- New admin RPCs needed by the dashboard
