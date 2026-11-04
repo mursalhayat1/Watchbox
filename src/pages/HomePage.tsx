@@ -66,7 +66,7 @@ function FavoriteActorsRow({ actors }: { actors: ActorFavorite[] }) {
       <div className="flex items-center justify-between px-4 md:px-6 mb-4">
         <div>
           <p className="text-[10px] font-semibold tracking-widest uppercase text-white/38 mb-0.5">My Library</p>
-          <h2 className="text-base md:text-lg font-bold text-white flex items-center gap-2">
+          <h2 data-section-title className="text-base md:text-lg font-bold text-white flex items-center gap-2">
             Favorite Actors
             <Heart className="w-4 h-4 text-red-400 fill-red-400" />
           </h2>
@@ -232,7 +232,7 @@ export default function HomePage() {
   const seo = generateHomepageMetadata();
 
   return (
-    <div className="relative min-h-screen bg-[#050a0e] flex flex-col overflow-x-hidden">
+    <div className="section-title-xl relative min-h-screen bg-[#050a0e] flex flex-col overflow-x-hidden">
       <PageMeta seo={seo} />
 
       {/* Fixed Silk background */}

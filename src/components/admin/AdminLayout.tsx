@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Film, Tv2, User2, Database, BarChart3,
   Activity, Settings, FileText, ShieldCheck, Menu, LogOut,
-  ChevronRight, Clapperboard, LayoutList,
+  ChevronRight, LayoutList,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -120,9 +120,7 @@ function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
     <div className="flex flex-col h-full bg-sidebar">
       {/* Logo */}
       <div className="flex items-center gap-2.5 px-4 py-5 shrink-0">
-        <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
-          <Clapperboard className="w-4 h-4 text-primary" />
-        </div>
+        <img src="/images/logo/logo-glass.png" alt="WatchBox" className="w-7 h-7 shrink-0 object-contain" />
         <div className="min-w-0">
           <p className="text-sm font-bold text-foreground truncate">WatchBox</p>
           <p className="text-[10px] text-primary/80 font-medium uppercase tracking-wider">Admin</p>

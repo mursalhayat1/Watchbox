@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { AlertCircle, Check, Clapperboard, Loader2, ShieldCheck } from 'lucide-react';
+import { AlertCircle, Check, Loader2, ShieldCheck } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { safeAppPath } from '@/lib/safe-return-path';
@@ -119,7 +119,7 @@ export default function OAuthConsentPage() {
       <PageMeta seo={noindexMetadata('Connect an AI client', '/oauth/consent')} />
       <div className="mx-auto w-full max-w-xl">
         <div className="mb-6 flex items-center justify-center gap-2 text-sm font-semibold tracking-wide text-foreground">
-          <Clapperboard className="h-5 w-5 text-primary" />
+          <img src="/images/logo/logo-glass.png" alt="" className="h-6 w-6 shrink-0" />
           WatchBox
         </div>
         <Card className="border-border/70 shadow-xl">

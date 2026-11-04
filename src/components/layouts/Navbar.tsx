@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   Search, X, Clapperboard, Star, Home, Compass, Sparkles, BookOpen, LogIn,
-  UserCircle2, BarChart2, LogOut, ShieldCheck, type LucideIcon,
+  UserCircle2, BarChart2, LogOut, ShieldCheck, Blocks, type LucideIcon,
 } from 'lucide-react';
 import { useMovieSearch } from '@/hooks/useTMDB';
 import { tmdbImageUrl } from '@/services/tmdb';
@@ -122,6 +122,7 @@ const NAV_LINKS: { label: string; to: string; icon: LucideIcon }[] = [
   { label: 'Discover', to: '/discover', icon: Compass },
   { label: 'For You',  to: '/for-you',  icon: Sparkles },
   { label: 'Library',  to: '/library',  icon: BookOpen },
+  { label: 'MCP',      to: '/connect',  icon: Blocks  },
 ];
 
 // ── Full-page search overlay ─────────────────────────────────────────────────
@@ -361,8 +362,8 @@ export default function Navbar() {
 
           {/* Logo */}
           <GlassIconButton asChild size={40} style={{ borderRadius: '12px' }}>
-            <Link to="/" aria-label="Home">
-              <Clapperboard className="w-5 h-5" strokeWidth={2} />
+            <Link to="/" aria-label="Home" className="flex items-center justify-center">
+              <img src="/images/logo/logo-glass.png" alt="WatchBox" className="w-6 h-6 object-contain" draggable={false} />
             </Link>
           </GlassIconButton>
 

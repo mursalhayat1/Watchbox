@@ -15,6 +15,11 @@ const AuthCallbackPage  = lazy(() => import('./pages/AuthCallbackPage'));
 const OAuthConsentPage  = lazy(() => import('./pages/OAuthConsentPage'));
 const StatsPage         = lazy(() => import('./pages/StatsPage'));
 const OnboardingPage    = lazy(() => import('./pages/OnboardingPage'));
+const McpPage           = lazy(() => import('./pages/McpPage'));
+const AboutPage         = lazy(() => import('./pages/AboutPage'));
+const PrivacyPage       = lazy(() => import('./pages/PrivacyPage'));
+const TermsPage         = lazy(() => import('./pages/TermsPage'));
+const UserAgreementPage = lazy(() => import('./pages/UserAgreementPage'));
 
 // ── Admin pages (lazy — not bundled with user-facing code) ────────────────────
 const AdminSectionsPage   = lazy(() => import('./pages/admin/AdminSectionsPage'));
@@ -82,6 +87,11 @@ export const routes: RouteConfig[] = [
   { name: 'OAuthConsent', path: '/oauth/consent',      element: <Page><OAuthConsentPage /></Page>,  public: true },
   { name: 'Onboarding',   path: '/onboarding',       element: <Page><OnboardingPage /></Page>,    public: true },
   { name: 'Stats',        path: '/stats',            element: <Page><StatsPage /></Page>,         public: true },
+  { name: 'MCP',          path: '/connect',          element: <Page><McpPage /></Page>,           public: true },
+  { name: 'About',        path: '/about',            element: <Page><AboutPage /></Page>,        public: true },
+  { name: 'Privacy',        path: '/privacy',        element: <Page><PrivacyPage /></Page>,        public: true },
+  { name: 'Terms',          path: '/terms',          element: <Page><TermsPage /></Page>,          public: true },
+  { name: 'User Agreement', path: '/user-agreement', element: <Page><UserAgreementPage /></Page>,  public: true },
   // Legacy redirects
   { name: 'BrowseMovieRedirect', path: '/browse/movie', element: <Page><DiscoverPage /></Page>, public: true },
   { name: 'BrowseTVRedirect',    path: '/browse/tv',    element: <Page><ForYouPage /></Page>,   public: true },

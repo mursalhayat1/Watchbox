@@ -149,3 +149,19 @@
   .cinema-page-bg { transition: none; }
 }
 
+/* ── Section headings — Home & Discover only ─────────────────────────────── */
+/* Scope mechanism: the page root carries .section-title-xl; every section   */
+/* heading rendered by CarouselRow / FavoriteActorsRow sets                  */
+/* data-section-title on its <h2>. Other pages (ForYou, Detail, Library)     */
+/* keep the base size.                                                       */
+.section-title-xl h2[data-section-title] {
+  font-size: 1.25rem;   /* 20px — was 16px */
+  line-height: 1.75rem;
+}
+@media (min-width: 768px) {
+  .section-title-xl h2[data-section-title] {
+    font-size: 1.5rem;  /* 24px — was 18px */
+    line-height: 2rem;
+  }
+}
+

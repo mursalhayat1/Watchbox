@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Mail, Eye, EyeOff, Clapperboard, Chrome } from 'lucide-react';
+import { Mail, Eye, EyeOff, Chrome } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import Silk from '@/components/ui/Silk';
@@ -90,9 +90,8 @@ export default function LoginPage() {
       <div className="relative z-10 w-full max-w-md">
         {/* Logo + title */}
         <div className="flex flex-col items-center mb-8">
-          <Link to="/" className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4 hover:opacity-80 transition-opacity"
-            style={{ background: 'rgba(14,116,144,0.30)', border: '1px solid rgba(14,116,144,0.55)' }}>
-            <Clapperboard className="w-7 h-7 text-cyan-300" />
+          <Link to="/" className="mb-4 hover:opacity-80 transition-opacity">
+            <img src="/images/logo/logo-glass.png" alt="WatchBox" className="w-14 h-14 object-contain" draggable={false} />
           </Link>
           <h1 className="text-2xl font-bold text-white tracking-tight">
             {tab === 'signin' ? 'Welcome back' : 'Create account'}
@@ -171,7 +170,7 @@ export default function LoginPage() {
                   className="mt-0.5 w-4 h-4 rounded accent-cyan-500 shrink-0" />
                 <span className="text-xs text-white/40 leading-relaxed">
                   I agree to the{' '}
-                  <Link to="/terms" className="text-cyan-400 hover:underline">User Agreement</Link>
+                  <Link to="/user-agreement" className="text-cyan-400 hover:underline">User Agreement</Link>
                   {' '}and{' '}
                   <Link to="/privacy" className="text-cyan-400 hover:underline">Privacy Policy</Link>
                 </span>

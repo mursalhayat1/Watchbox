@@ -4,6 +4,8 @@ export interface WatchboxBrowserConfig {
   tmdbApiKey: string | null;
   siteUrl: string | null;
   appId: string | null;
+  /** Public HTTPS origin of the WatchBox MCP server (for connector setup pages) */
+  mcpPublicUrl: string | null;
 }
 
 declare global {
@@ -29,4 +31,5 @@ export const publicRuntimeConfig: WatchboxBrowserConfig = {
   tmdbApiKey: firstValue(injected?.tmdbApiKey, import.meta.env.VITE_TMDB_API_KEY),
   siteUrl: firstValue(injected?.siteUrl, import.meta.env.VITE_SITE_URL, browserOrigin)?.replace(/\/$/, '') ?? null,
   appId: firstValue(injected?.appId, import.meta.env.VITE_APP_ID),
+  mcpPublicUrl: firstValue(injected?.mcpPublicUrl, import.meta.env.VITE_MCP_PUBLIC_URL),
 };

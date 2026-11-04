@@ -784,7 +784,7 @@ export default function DiscoverPage() {
   const showDefault   = !showSearch && !showFiltered;
 
   return (
-    <div className="relative flex flex-col min-h-screen bg-[#050a0e] overflow-x-hidden">
+    <div className="section-title-xl relative flex flex-col min-h-screen bg-[#050a0e] overflow-x-hidden">
       <PageMeta seo={generateStaticMetadata({
         title: 'Discover',
         description: 'Explore movies and TV shows by genre, year, rating, and language. Find your next favourite title on WatchBox.',

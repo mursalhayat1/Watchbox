@@ -29,7 +29,10 @@ const PageMeta = ({
   const resolvedJsonLd      = seo?.jsonLd;
 
   return (
-    <Helmet>
+    // defer={false}: commit head tags synchronously instead of scheduling them
+    // via requestAnimationFrame (react-helmet-async default), which never fires
+    // in hidden tabs and delays the first head update until the frame after paint.
+    <Helmet defer={false}>
       {/* Core */}
       <title>{resolvedTitle}</title>
       {resolvedDescription && (

@@ -62,7 +62,7 @@ export default function CarouselRow({
               {sectionLabel}
             </p>
           )}
-          <h2 className="text-base md:text-lg font-bold text-white">{title}</h2>
+          <h2 data-section-title className="text-base md:text-lg font-bold text-white">{title}</h2>
         </div>
         {viewAllLink && (
           <Link
