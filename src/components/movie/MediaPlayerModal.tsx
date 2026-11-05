@@ -124,6 +124,7 @@ export default function MediaPlayerModal({
     setStarted(false);
     setSeasonCounts({});
     countedSeasonsRef.current = new Set();
+    modalSessionRef.current += 1;
     openedAtRef.current = Date.now();
 
     // Check if there's a saved position to resume from
@@ -149,24 +150,53 @@ export default function MediaPlayerModal({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, tmdbId, initialSeason, initialEpisode]);
 
-  // Fetch season episode counts to drive prev/next episode navigation (TV only)
+  // Fetch season episode counts to drive prev/next episode navigation (TV only).
+  // A failed fetch must NOT poison the season: TMDB hiccups (429s, ad-blockers)
+  // previously looked identical to a real 0-episode season, which disabled the
+  // Next button for the whole modal view while Prev kept working. Mark the
+  // season as counted only on success, retry transient failures, and coalesce
+  // concurrent requests for the same season.
+  const ensureInFlightRef = useRef<Partial<Record<number, Promise<void>>>>({});
+  // Guards task completion against modal close/reopen (not effect re-runs —
+  // saved progress can change the season right after open, and an effect-level
+  // flag would drop the in-flight result and never count the season).
+  const modalSessionRef = useRef(0);
   useEffect(() => {
     if (!open || mediaType !== 'tv') return;
-    let alive = true;
-    const ensure = async (s: number) => {
-      if (s < 1 || countedSeasonsRef.current.has(s)) return;
-      countedSeasonsRef.current.add(s);
-      let count = 0;
-      try {
-        const res = await getTVSeason(tmdbId, s);
-        count = res?.episodes?.length ?? 0;
-      } catch { count = 0; }
-      if (alive) setSeasonCounts(prev => ({ ...prev, [s]: count }));
+    const session = modalSessionRef.current;
+    const sleep = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
+    const ensure = (s: number): Promise<void> => {
+      if (s < 1 || countedSeasonsRef.current.has(s)) {
+        return ensureInFlightRef.current[s] ?? Promise.resolve();
+      }
+      if (ensureInFlightRef.current[s]) return ensureInFlightRef.current[s];
+      const task = (async () => {
+        const maxAttempts = 3;
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
+          try {
+            const res = await getTVSeason(tmdbId, s);
+            const count = res?.episodes?.length ?? 0;
+            if (modalSessionRef.current !== session) return;
+            countedSeasonsRef.current.add(s);
+            setSeasonCounts(prev => ({ ...prev, [s]: count }));
+            return;
+          } catch {
+            if (attempt === maxAttempts - 1) break; // stay un-counted; future renders retry
+            await sleep(600 * (attempt + 1));
+            if (modalSessionRef.current !== session) return;
+          }
+        }
+      })()
+        .finally(() => {
+          if (ensureInFlightRef.current[s] === task) delete ensureInFlightRef.current[s];
+        });
+      ensureInFlightRef.current[s] = task;
+      return task;
     };
     void ensure(season);
     if (episode === 1 && season > 1) void ensure(season - 1);
-    return () => { alive = false; };
-  }, [open, tmdbId, mediaType, season, episode]);
+    if (mediaType === 'tv' && totalSeasons && season < totalSeasons) void ensure(season + 1);
+  }, [open, tmdbId, mediaType, season, episode, totalSeasons]);
 
   // Reset loaded when season/episode changes
   useEffect(() => { setLoaded(false); setStarted(false); }, [season, episode]);
@@ -373,6 +403,8 @@ export default function MediaPlayerModal({
                 <Maximize2 className="w-4 h-4" />
               </button>
               <button onClick={handleClose}
+                aria-label="Close"
+                title="Close player"
                 className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-white/10"
                 style={{ color: 'rgba(255,255,255,0.6)' }}>
                 <X className="w-4 h-4" />
