@@ -1,6 +1,6 @@
 // ── MediaPlayerModal ── progress-aware, auto-library, episode tracking ─────────
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { X, Tv, Film, Maximize2, RotateCcw, Play, ChevronDown } from 'lucide-react';
+import { X, Tv, Film, Maximize2, RotateCcw, Play, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   saveMovieProgress, saveTVProgress,
@@ -8,6 +8,8 @@ import {
   movieHasResume, tvHasResume,
   fmtSecs,
 } from '@/hooks/usePlaybackProgress';
+import { getTVSeason } from '@/services/tmdb';
+import { nextEpisode, prevEpisode, type EpisodeStep } from '@/lib/episode-nav';
 
 // ── Providers ─────────────────────────────────────────────────────────────────
 export type EmbedProvider = 'nxsha' | 'screenscape';
@@ -69,7 +71,7 @@ interface MediaPlayerModalProps {
 export default function MediaPlayerModal({
   open, onClose, onPlayStart,
   tmdbId, mediaType, title,
-  totalSeasons: _totalSeasons = 1,
+  totalSeasons = 1,
   initialSeason = 1, initialEpisode = 1,
 }: MediaPlayerModalProps) {
   const [season, setSeason]              = useState(initialSeason);
@@ -78,6 +80,10 @@ export default function MediaPlayerModal({
   const [playStartFired, setStarted]     = useState(false);
   const [provider, setProvider]          = useState<EmbedProvider>(getSavedProvider);
   const [providerOpen, setProviderOpen]  = useState(false);
+
+  // Season episode counts → drive prev/next episode stepping (TV only)
+  const [seasonCounts, setSeasonCounts] = useState<Record<number, number>>({});
+  const countedSeasonsRef = useRef<Set<number>>(new Set());
 
   // Resume prompt: show when there's saved progress on open
   const [showResume, setShowResume]   = useState(false);
@@ -89,6 +95,14 @@ export default function MediaPlayerModal({
   const openedAtRef  = useRef<number>(0);
 
   const embedUrl = buildEmbedUrl(provider, mediaType, tmdbId, season, episode);
+
+  // Determinate episode steps (null → button disabled); TV only
+  const nextStep = mediaType === 'tv'
+    ? nextEpisode(season, episode, totalSeasons, seasonCounts)
+    : null;
+  const prevStep = mediaType === 'tv'
+    ? prevEpisode(season, episode, seasonCounts)
+    : null;
 
   const handleProviderChange = useCallback((p: EmbedProvider) => {
     setProvider(p);
@@ -105,6 +119,8 @@ export default function MediaPlayerModal({
     setEpisode(initialEpisode);
     setLoaded(false);
     setStarted(false);
+    setSeasonCounts({});
+    countedSeasonsRef.current = new Set();
     openedAtRef.current = Date.now();
 
     // Check if there's a saved position to resume from
@@ -130,32 +146,64 @@ export default function MediaPlayerModal({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, tmdbId, initialSeason, initialEpisode]);
 
+  // Fetch season episode counts to drive prev/next episode navigation (TV only)
+  useEffect(() => {
+    if (!open || mediaType !== 'tv') return;
+    let alive = true;
+    const ensure = async (s: number) => {
+      if (s < 1 || countedSeasonsRef.current.has(s)) return;
+      countedSeasonsRef.current.add(s);
+      let count = 0;
+      try {
+        const res = await getTVSeason(tmdbId, s);
+        count = res?.episodes?.length ?? 0;
+      } catch { count = 0; }
+      if (alive) setSeasonCounts(prev => ({ ...prev, [s]: count }));
+    };
+    void ensure(season);
+    if (episode === 1 && season > 1) void ensure(season - 1);
+    return () => { alive = false; };
+  }, [open, tmdbId, mediaType, season, episode]);
+
   // Reset loaded when season/episode changes
   useEffect(() => { setLoaded(false); setStarted(false); }, [season, episode]);
 
+  // Persist the current session's watch time to the given episode (no-op if the
+  // player never loaded). Called when switching episodes and when closing.
+  const flushProgress = useCallback((s: number, e: number) => {
+    if (!loaded || openedAtRef.current === 0) return;
+    const sessionSecs = (Date.now() - openedAtRef.current) / 1000;
+    if (mediaType === 'movie') {
+      // Combine any existing progress with this session
+      const existing = getMovieProgress(tmdbId);
+      const prevPos = existing?.positionSecs ?? 0;
+      const newPos = Math.round(prevPos + sessionSecs);
+      const dur = existing?.durationSecs ?? 0;
+      saveMovieProgress(tmdbId, newPos, dur);
+    } else {
+      const existing = getTVProgress(tmdbId);
+      const keepsSpot = existing?.season === s && existing?.episode === e;
+      const prevPos = keepsSpot ? (existing.positionSecs ?? 0) : 0;
+      const newPos = Math.round(prevPos + sessionSecs);
+      const dur = existing?.durationSecs ?? 0;
+      saveTVProgress(tmdbId, s, e, newPos, dur);
+    }
+  }, [loaded, mediaType, tmdbId]);
+
+  const gotoEpisode = useCallback((target: EpisodeStep | null) => {
+    if (!target) return;
+    flushProgress(season, episode);
+    openedAtRef.current = Date.now();
+    setShowResume(false);
+    setSeason(target.season);
+    setEpisode(target.episode);
+  }, [flushProgress, season, episode]);
+
   // Save progress on close — estimate position from session length
   const handleClose = useCallback(() => {
-    if (loaded && openedAtRef.current > 0) {
-      const sessionSecs = (Date.now() - openedAtRef.current) / 1000;
-      if (mediaType === 'movie') {
-        // Combine any existing progress with this session
-        const existing = getMovieProgress(tmdbId);
-        const prevPos = existing?.positionSecs ?? 0;
-        const newPos = Math.round(prevPos + sessionSecs);
-        const dur = existing?.durationSecs ?? 0;
-        saveMovieProgress(tmdbId, newPos, dur);
-      } else {
-        const existing = getTVProgress(tmdbId);
-        const prevPos = (existing?.season === season && existing?.episode === episode)
-          ? (existing.positionSecs ?? 0)
-          : 0;
-        const newPos = Math.round(prevPos + sessionSecs);
-        const dur = existing?.durationSecs ?? 0;
-        saveTVProgress(tmdbId, season, episode, newPos, dur);
-      }
-    }
+    flushProgress(season, episode);
     onClose();
-  }, [loaded, mediaType, tmdbId, season, episode, onClose]);
+  }, [flushProgress, season, episode, onClose]);
 
   // Close on Escape
   useEffect(() => {
@@ -227,6 +275,32 @@ export default function MediaPlayerModal({
 
             {/* Right: provider switcher + controls */}
             <div className="flex items-center gap-2 shrink-0">
+
+              {/* Prev / Next episode — TV only */}
+              {mediaType === 'tv' && (
+                <>
+                  <button
+                    onClick={() => gotoEpisode(prevStep)}
+                    disabled={!prevStep}
+                    aria-label="Previous episode"
+                    title="Previous episode"
+                    className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-white/10 disabled:opacity-25 disabled:hover:bg-transparent"
+                    style={{ color: 'rgba(255,255,255,0.6)' }}
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => gotoEpisode(nextStep)}
+                    disabled={!nextStep}
+                    aria-label="Next episode"
+                    title="Next episode"
+                    className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-white/10 disabled:opacity-25 disabled:hover:bg-transparent"
+                    style={{ color: 'rgba(255,255,255,0.6)' }}
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </>
+              )}
 
               {/* Provider switcher */}
               <div className="relative">
