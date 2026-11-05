@@ -284,20 +284,22 @@ export default function MediaPlayerModal({
                     disabled={!prevStep}
                     aria-label="Previous episode"
                     title="Previous episode"
-                    className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-white/10 disabled:opacity-25 disabled:hover:bg-transparent"
+                    className="flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium transition-colors hover:bg-white/10 disabled:opacity-25 disabled:hover:bg-transparent"
                     style={{ color: 'rgba(255,255,255,0.6)' }}
                   >
-                    <ChevronLeft className="w-4 h-4" />
+                    <ChevronLeft className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Previous</span>
                   </button>
                   <button
                     onClick={() => gotoEpisode(nextStep)}
                     disabled={!nextStep}
                     aria-label="Next episode"
                     title="Next episode"
-                    className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-white/10 disabled:opacity-25 disabled:hover:bg-transparent"
+                    className="flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-medium transition-colors hover:bg-white/10 disabled:opacity-25 disabled:hover:bg-transparent"
                     style={{ color: 'rgba(255,255,255,0.6)' }}
                   >
-                    <ChevronRight className="w-4 h-4" />
+                    <span className="hidden sm:inline">Next</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
                   </button>
                 </>
               )}
