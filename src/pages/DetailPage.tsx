@@ -669,10 +669,10 @@ export default function DetailPage() {
   // (server row + local mirror) and refresh the grid. Best-effort: local
   // mark lands even if the network write fails.
   const handleEpisodeLeft = useCallback((s: number, e: number) => {
-    void markEpisodeWatched(movie.id, s, e).catch(() => { /* best-effort */ });
-    markEpisodeWatchedLocal(movie.id, s, e);
+    void markEpisodeWatched(mediaId, s, e).catch(() => { /* best-effort */ });
+    markEpisodeWatchedLocal(mediaId, s, e);
     setEpisodeTickRefresh(n => n + 1);
-  }, [movie.id]);
+  }, [mediaId]);
   const [youtubeVideo, setYoutubeVideo] = useState<{ key: string; title: string } | null>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
 

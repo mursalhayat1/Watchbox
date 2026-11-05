@@ -1,0 +1,22 @@
+- generic [ref=f5e2]:
+  - banner [ref=f5e4]:
+    - generic [ref=f5e5]:
+      - link "Home" [ref=f5e6] [cursor=pointer]:
+        - /url: /
+        - img "WatchBox" [ref=f5e7]
+      - navigation [ref=f5e8]:
+        - link "Home" [ref=f5e9] [cursor=pointer]:
+          - /url: /
+        - link "Discover" [ref=f5e10] [cursor=pointer]:
+          - /url: /discover
+        - link "For You" [ref=f5e11] [cursor=pointer]:
+          - /url: /for-you
+        - link "Library" [ref=f5e12] [cursor=pointer]:
+          - /url: /library
+        - link "MCP" [ref=f5e13] [cursor=pointer]:
+          - /url: /connect
+      - generic [ref=f5e14]:
+        - button "Open search" [ref=f5e15] [cursor=pointer]
+        - link "Sign In" [ref=f5e16] [cursor=pointer]:
+          - /url: /login
+  - region "Notifications alt+T"
