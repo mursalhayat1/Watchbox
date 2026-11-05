@@ -12,6 +12,7 @@ import { getPersonDetails, tmdbImageUrl, type PersonCredit } from '@/services/tm
 import { isFavoriteActor, toggleFavoriteActor } from '@/lib/supabase/actorFavorites';
 import PageMeta from '@/components/common/PageMeta';
 import { generatePersonMetadata } from '@/lib/seo';
+import { formatDate } from '@/lib/format-date';
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 function calcAge(birthday: string, deathday?: string | null) {
@@ -31,7 +32,7 @@ function genderLabel(g: number) {
 }
 
 function fmtDate(d: string) {
-  return new Date(d).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  return formatDate(d);
 }
 
 // ── Credit card in filmography grid ──────────────────────────────────────────

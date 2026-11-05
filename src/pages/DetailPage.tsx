@@ -15,6 +15,7 @@ import { GlassButton, GlassFilterDef } from '@/components/ui/liquid-glass';
 import { useAsync, useTMDBList } from '@/hooks/useTMDB';
 import { useLibraryItem } from '@/hooks/useLibrary';
 import { LIBRARY_STATUSES, type LibraryStatus } from '@/lib/libraryApi';
+import { formatDate } from '@/lib/format-date';
 import {
   getTVProgress,
   getMovieProgress,
@@ -735,14 +736,11 @@ export default function DetailPage() {
 
   const title = movie.title ?? movie.name ?? 'Unknown';
 
-  // Full release date (day, month, year) for the meta chips. TMDB dates are
-  // 'YYYY-MM-DD'; format in UTC so the reported date never shifts a day in
-  // negative-offset timezones.
+  // Full release date (day, month, year) for the meta chips. The shared
+  // formatter handles partial ('YYYY'/'YYYY-MM') and malformed TMDB dates
+  // without inventing parts or throwing at render time.
   const releaseDate = movie.release_date ?? movie.first_air_date ?? '';
-  const releaseDateLabel = releaseDate
-    ? new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', year: 'numeric', month: 'long', day: 'numeric' })
-        .format(new Date(`${releaseDate}T00:00:00Z`))
-    : '';
+  const releaseDateLabel = formatDate(releaseDate);
 
   // posterUrl used for poster image display
   const genres = movie.genres ?? [];

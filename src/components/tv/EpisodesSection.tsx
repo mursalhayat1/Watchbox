@@ -5,6 +5,7 @@ import { getShowProgress, markEpisodeWatched, type EpisodeProgress } from '@/lib
 import { isEpisodeWatchedLocal } from '@/hooks/usePlaybackProgress';
 import { useAuth } from '@/contexts/AuthContext';
 import { GlassIconButton } from '@/components/ui/liquid-glass';
+import { formatDateShort } from '@/lib/format-date';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 function fmtRuntime(mins: number | null): string {
@@ -14,8 +15,7 @@ function fmtRuntime(mins: number | null): string {
 }
 
 function fmtDate(d: string | null): string {
-  if (!d) return '';
-  return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  return formatDateShort(d);
 }
 
 // ── EpisodeCard ───────────────────────────────────────────────────────────────
