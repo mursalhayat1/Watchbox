@@ -734,7 +734,15 @@ export default function DetailPage() {
   }
 
   const title = movie.title ?? movie.name ?? 'Unknown';
-  const year = (movie.release_date ?? movie.first_air_date ?? '').slice(0, 4);
+
+  // Full release date (day, month, year) for the meta chips. TMDB dates are
+  // 'YYYY-MM-DD'; format in UTC so the reported date never shifts a day in
+  // negative-offset timezones.
+  const releaseDate = movie.release_date ?? movie.first_air_date ?? '';
+  const releaseDateLabel = releaseDate
+    ? new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', year: 'numeric', month: 'long', day: 'numeric' })
+        .format(new Date(`${releaseDate}T00:00:00Z`))
+    : '';
 
   // posterUrl used for poster image display
   const genres = movie.genres ?? [];
@@ -983,9 +991,9 @@ export default function DetailPage() {
 
               {/* Meta chips */}
               <div className="flex flex-wrap items-center gap-3 mb-3 text-sm text-white/70">
-                {year && (
+                {releaseDateLabel && (
                   <span className="flex items-center gap-1.5">
-                    <span className="text-white/40">🗓</span> {year}
+                    <span className="text-white/40">🗓</span> {releaseDateLabel}
                   </span>
                 )}
                 {movie.runtime && (
