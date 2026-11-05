@@ -43,3 +43,6 @@ history/*.json
 
 .vercel
 .env*
+
+/dist-debug/
+/.playwright-mcp/
