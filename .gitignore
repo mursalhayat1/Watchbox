@@ -36,6 +36,7 @@ history/*.json
 .native-wind-cache
 .vite
 /.work/
+/.manus/
 .env
 .env.local
 .env.*.local
