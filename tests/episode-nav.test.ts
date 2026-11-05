@@ -1,6 +1,6 @@
 // Episode navigation stepping logic — season-boundary aware.
 import { describe, it, expect } from 'vitest';
-import { nextEpisode, prevEpisode } from '../src/lib/episode-nav';
+import { nextEpisode, prevEpisode, isForwardStep } from '../src/lib/episode-nav';
 
 const counts = { 1: 4, 2: 6, 3: 2 };
 
@@ -41,5 +41,27 @@ describe('prevEpisode', () => {
 
   it('is null at the very first episode', () => {
     expect(prevEpisode(1, 1, counts)).toBeNull();
+  });
+});
+
+describe('isForwardStep', () => {
+  it('is true when moving to the next episode in the same season', () => {
+    expect(isForwardStep({ season: 1, episode: 2 }, { season: 1, episode: 3 })).toBe(true);
+  });
+
+  it('is true when crossing into a later season', () => {
+    expect(isForwardStep({ season: 1, episode: 4 }, { season: 2, episode: 1 })).toBe(true);
+  });
+
+  it('is false when stepping backward', () => {
+    expect(isForwardStep({ season: 2, episode: 3 }, { season: 2, episode: 2 })).toBe(false);
+  });
+
+  it('is false for the same step (e.g. provider switch or replay)', () => {
+    expect(isForwardStep({ season: 1, episode: 2 }, { season: 1, episode: 2 })).toBe(false);
+  });
+
+  it('is false when coming from nothing (cold open)', () => {
+    expect(isForwardStep(null, { season: 1, episode: 2 })).toBe(false);
   });
 });

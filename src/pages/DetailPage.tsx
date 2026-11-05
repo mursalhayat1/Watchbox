@@ -19,7 +19,9 @@ import { formatDate } from '@/lib/format-date';
 import {
   getTVProgress,
   getMovieProgress,
+  markEpisodeWatchedLocal,
 } from '@/hooks/usePlaybackProgress';
+import { markEpisodeWatched } from '@/lib/supabase/episodeProgress';
 import {
   getMovieDetails, getTVDetails,
   getSimilarMovies, getSimilarTV,
@@ -659,6 +661,18 @@ export default function DetailPage() {
   const [playerOpen, setPlayerOpen] = useState(false);
   const [playerSeason, setPlayerSeason] = useState(1);
   const [playerEpisode, setPlayerEpisode] = useState(1);
+  // Bumped whenever an episode auto-watches from inside the player so the
+  // episode grid re-reads its watched state.
+  const [episodeTickRefresh, setEpisodeTickRefresh] = useState(0);
+
+  // Player stepped forward past an episode → persist the green tick
+  // (server row + local mirror) and refresh the grid. Best-effort: local
+  // mark lands even if the network write fails.
+  const handleEpisodeLeft = useCallback((s: number, e: number) => {
+    void markEpisodeWatched(movie.id, s, e).catch(() => { /* best-effort */ });
+    markEpisodeWatchedLocal(movie.id, s, e);
+    setEpisodeTickRefresh(n => n + 1);
+  }, [movie.id]);
   const [youtubeVideo, setYoutubeVideo] = useState<{ key: string; title: string } | null>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
 
@@ -1137,6 +1151,7 @@ export default function DetailPage() {
                 setPlayerEpisode(e);
                 setPlayerOpen(true);
               }}
+              refreshKey={episodeTickRefresh}
             />
           )}
 
@@ -1185,6 +1200,7 @@ export default function DetailPage() {
       <MediaPlayerModal
         open={playerOpen}
         onClose={() => setPlayerOpen(false)}
+        onEpisodeLeft={handleEpisodeLeft}
         onPlayStart={(_s, _e) => void handlePlayStart(
           _s, _e,
           title,

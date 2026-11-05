@@ -134,10 +134,13 @@ export default function EpisodesSection({
   tvId,
   totalSeasons,
   onPlayEpisode,
+  refreshKey = 0,
 }: {
   tvId: number;
   totalSeasons: number;
   onPlayEpisode: (seasonNumber: number, episodeNumber: number) => void;
+  /** Bump to re-read watched state after off-section changes (auto-mark from the player). */
+  refreshKey?: number;
 }) {
   const { user } = useAuth();
   const [activeSeason, setActiveSeason] = useState(1);
@@ -168,7 +171,7 @@ export default function EpisodesSection({
     setProgressMap(map);
   }, [tvId, user]);
 
-  useEffect(() => { void loadProgress(); }, [loadProgress]);
+  useEffect(() => { void loadProgress(); }, [loadProgress, refreshKey]);
 
   const handlePlay = async (ep: TvEpisode) => {
     onPlayEpisode(ep.season_number, ep.episode_number);

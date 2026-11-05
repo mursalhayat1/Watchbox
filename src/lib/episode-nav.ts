@@ -37,3 +37,18 @@ export function prevEpisode(
   }
   return null; // very first episode
 }
+
+/**
+ * True when `to` is strictly ahead of `from` — a "moved on to the next
+ * episode" transition (within a season or into a later season). Backward
+ * steps, replays of the same step, and a missing starting point are never
+ * forward.
+ */
+export function isForwardStep(
+  from: EpisodeStep | null | undefined,
+  to: EpisodeStep,
+): boolean {
+  if (!from) return false;
+  return to.season > from.season
+    || (to.season === from.season && to.episode > from.episode);
+}

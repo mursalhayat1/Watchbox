@@ -9,7 +9,7 @@ import {
   fmtSecs,
 } from '@/hooks/usePlaybackProgress';
 import { getTVSeason } from '@/services/tmdb';
-import { nextEpisode, prevEpisode, type EpisodeStep } from '@/lib/episode-nav';
+import { nextEpisode, prevEpisode, isForwardStep, type EpisodeStep } from '@/lib/episode-nav';
 
 // ── Providers ─────────────────────────────────────────────────────────────────
 export type EmbedProvider = 'nxsha' | 'screenscape';
@@ -60,6 +60,9 @@ interface MediaPlayerModalProps {
   onClose: () => void;
   /** Called once when playback actually starts (iframe loaded). Use to trigger library add. */
   onPlayStart?: (season: number, episode: number) => void;
+  /** TV only — fired when the user steps forward to another episode while the
+   *  player had loaded. Use to auto-mark the left-behind episode as watched. */
+  onEpisodeLeft?: (season: number, episode: number) => void;
   tmdbId: number;
   mediaType: 'movie' | 'tv';
   title: string;
@@ -69,7 +72,7 @@ interface MediaPlayerModalProps {
 }
 
 export default function MediaPlayerModal({
-  open, onClose, onPlayStart,
+  open, onClose, onPlayStart, onEpisodeLeft,
   tmdbId, mediaType, title,
   totalSeasons = 1,
   initialSeason = 1, initialEpisode = 1,
@@ -192,12 +195,19 @@ export default function MediaPlayerModal({
 
   const gotoEpisode = useCallback((target: EpisodeStep | null) => {
     if (!target) return;
+    // Stepping forward while the player has loaded ⇒ the episode left behind
+    // has been watched through — auto-tick it (fire-and-forget, parent decides
+    // where to persist).
+    if (mediaType === 'tv' && loaded
+      && onEpisodeLeft && isForwardStep({ season, episode }, target)) {
+      onEpisodeLeft(season, episode);
+    }
     flushProgress(season, episode);
     openedAtRef.current = Date.now();
     setShowResume(false);
     setSeason(target.season);
     setEpisode(target.episode);
-  }, [flushProgress, season, episode]);
+  }, [loaded, mediaType, onEpisodeLeft, flushProgress, season, episode]);
 
   // Save progress on close — estimate position from session length
   const handleClose = useCallback(() => {
