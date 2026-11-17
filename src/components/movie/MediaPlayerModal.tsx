@@ -10,48 +10,21 @@ import {
 } from '@/hooks/usePlaybackProgress';
 import { getTVSeason } from '@/services/tmdb';
 import { nextEpisode, prevEpisode, isForwardStep, type EpisodeStep } from '@/lib/episode-nav';
+import { buildEmbedUrl, getIframeSandbox, PROVIDERS, type EmbedProvider } from '@/lib/embed-providers';
 
 // ── Providers ─────────────────────────────────────────────────────────────────
-export type EmbedProvider = 'nxsha' | 'screenscape';
-
-const PROVIDERS: { id: EmbedProvider; label: string }[] = [
-  { id: 'nxsha',       label: 'NxSha'       },
-  { id: 'screenscape', label: 'ScreenScape' },
-];
-
 const LS_KEY = 'watchbox_embed_provider';
 
 function getSavedProvider(): EmbedProvider {
   try {
     const v = localStorage.getItem(LS_KEY);
-    if (v === 'nxsha' || v === 'screenscape') return v;
+    if (v === 'nxsha' || v === 'screenscape' || v === 'cinextream' || v === 'vidbolt') return v;
   } catch { /* ignore */ }
   return 'nxsha';
 }
 
 function saveProvider(p: EmbedProvider) {
   try { localStorage.setItem(LS_KEY, p); } catch { /* ignore */ }
-}
-
-// ── Embed URL builders ────────────────────────────────────────────────────────
-function buildEmbedUrl(
-  provider: EmbedProvider,
-  mediaType: 'movie' | 'tv',
-  tmdbId: number,
-  season = 1,
-  episode = 1,
-): string {
-  if (provider === 'screenscape') {
-    const params = new URLSearchParams({ tmdb: String(tmdbId), type: mediaType });
-    if (mediaType === 'tv') { params.set('s', String(season)); params.set('e', String(episode)); }
-    return `https://screenscape.me/embed?${params.toString()}`;
-  }
-  // nxsha (default)
-  const color = encodeURIComponent('#0e7490');
-  if (mediaType === 'tv') {
-    return `https://nxsha.space/embed/tv/${tmdbId}/${season}/${episode}?color=${color}`;
-  }
-  return `https://nxsha.space/embed/movie/${tmdbId}?color=${color}`;
 }
 
 // ── Main modal ────────────────────────────────────────────────────────────────
@@ -94,8 +67,13 @@ export default function MediaPlayerModal({
 
   const iframeRef    = useRef<HTMLIFrameElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  // Track the open-time so we can estimate session duration (no postMessage API)
+  // Used for providers that don't expose playback events.
   const openedAtRef  = useRef<number>(0);
+  const playerPositionRef = useRef(0);
+  const playerDurationRef = useRef(0);
+  const resumePendingRef = useRef(false);
+  const pendingVidboltResumeRef = useRef<number | null>(null);
+  const vidboltReadyRef = useRef(false);
 
   const embedUrl = buildEmbedUrl(provider, mediaType, tmdbId, season, episode);
 
@@ -113,6 +91,8 @@ export default function MediaPlayerModal({
     setProviderOpen(false);
     setLoaded(false);
     setStarted(false);
+    vidboltReadyRef.current = false;
+    pendingVidboltResumeRef.current = null;
   }, []);
 
   // Reset on open / media change — check for resume
@@ -126,6 +106,11 @@ export default function MediaPlayerModal({
     countedSeasonsRef.current = new Set();
     modalSessionRef.current += 1;
     openedAtRef.current = Date.now();
+    playerPositionRef.current = 0;
+    playerDurationRef.current = 0;
+    resumePendingRef.current = false;
+    pendingVidboltResumeRef.current = null;
+    vidboltReadyRef.current = false;
 
     // Check if there's a saved position to resume from
     if (mediaType === 'movie') {
@@ -134,6 +119,9 @@ export default function MediaPlayerModal({
         const p = getMovieProgress(tmdbId);
         setResumeLabel(`Resume from ${fmtSecs(p!.positionSecs)}`);
         setShowResume(true);
+        resumePendingRef.current = true;
+        playerPositionRef.current = p!.positionSecs;
+        playerDurationRef.current = p!.durationSecs;
       } else {
         setShowResume(false);
       }
@@ -143,6 +131,9 @@ export default function MediaPlayerModal({
         const p = getTVProgress(tmdbId);
         setResumeLabel(`Resume S${String(initialSeason).padStart(2,'0')}E${String(initialEpisode).padStart(2,'0')} from ${fmtSecs(p!.positionSecs)}`);
         setShowResume(true);
+        resumePendingRef.current = true;
+        playerPositionRef.current = p!.positionSecs;
+        playerDurationRef.current = p!.durationSecs;
       } else {
         setShowResume(false);
       }
@@ -199,12 +190,79 @@ export default function MediaPlayerModal({
   }, [open, tmdbId, mediaType, season, episode, totalSeasons]);
 
   // Reset loaded when season/episode changes
-  useEffect(() => { setLoaded(false); setStarted(false); }, [season, episode]);
+  useEffect(() => {
+    setLoaded(false);
+    setStarted(false);
+    vidboltReadyRef.current = false;
+    pendingVidboltResumeRef.current = null;
+  }, [season, episode]);
+
+  useEffect(() => {
+    if (!open || provider !== 'vidbolt') return;
+
+    const savePlayerProgress = (positionSecs: number, durationSecs: number) => {
+      if (resumePendingRef.current) return;
+      if (mediaType === 'movie') {
+        saveMovieProgress(tmdbId, positionSecs, durationSecs);
+      } else {
+        saveTVProgress(tmdbId, season, episode, positionSecs, durationSecs);
+      }
+    };
+
+    const handleMessage = (event: MessageEvent<unknown>) => {
+      if (event.origin !== 'https://vidbolt.pro') return;
+      if (event.source !== iframeRef.current?.contentWindow) return;
+      if (typeof event.data !== 'object' || event.data === null) return;
+
+      const data = event.data as { type?: unknown; time?: unknown; duration?: unknown };
+      if (data.type === 'ready') {
+        vidboltReadyRef.current = true;
+        setLoaded(true);
+        const resumePosition = pendingVidboltResumeRef.current;
+        if (resumePosition !== null) {
+          iframeRef.current?.contentWindow?.postMessage(
+            { type: 'seek', time: resumePosition },
+            'https://vidbolt.pro',
+          );
+          iframeRef.current?.contentWindow?.postMessage(
+            { type: 'play' },
+            'https://vidbolt.pro',
+          );
+          pendingVidboltResumeRef.current = null;
+        }
+        return;
+      }
+
+      if (data.type === 'timeupdate' && typeof data.time === 'number'
+        && Number.isFinite(data.time) && data.time >= 0) {
+        playerPositionRef.current = data.time;
+        savePlayerProgress(data.time, playerDurationRef.current);
+      } else if (data.type === 'durationchange' && typeof data.duration === 'number'
+        && Number.isFinite(data.duration) && data.duration >= 0) {
+        playerDurationRef.current = data.duration;
+        savePlayerProgress(playerPositionRef.current, data.duration);
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [open, provider, mediaType, tmdbId, season, episode]);
 
   // Persist the current session's watch time to the given episode (no-op if the
   // player never loaded). Called when switching episodes and when closing.
   const flushProgress = useCallback((s: number, e: number) => {
     if (!loaded || openedAtRef.current === 0) return;
+    if (provider === 'vidbolt') {
+      if (resumePendingRef.current) return;
+      const duration = playerDurationRef.current;
+      if (mediaType === 'movie') {
+        saveMovieProgress(tmdbId, playerPositionRef.current, duration);
+      } else {
+        saveTVProgress(tmdbId, s, e, playerPositionRef.current, duration);
+      }
+      return;
+    }
+
     const sessionSecs = (Date.now() - openedAtRef.current) / 1000;
     if (mediaType === 'movie') {
       // Combine any existing progress with this session
@@ -221,7 +279,7 @@ export default function MediaPlayerModal({
       const dur = existing?.durationSecs ?? 0;
       saveTVProgress(tmdbId, s, e, newPos, dur);
     }
-  }, [loaded, mediaType, tmdbId]);
+  }, [loaded, mediaType, provider, tmdbId]);
 
   const gotoEpisode = useCallback((target: EpisodeStep | null) => {
     if (!target) return;
@@ -441,7 +499,30 @@ export default function MediaPlayerModal({
                 >
                   <span className="text-sm text-white/80 font-medium whitespace-nowrap">{resumeLabel}</span>
                   <button
-                    onClick={() => setShowResume(false)}
+                    onClick={() => {
+                      const saved = mediaType === 'movie'
+                        ? getMovieProgress(tmdbId)
+                        : getTVProgress(tmdbId);
+                      const position = saved?.positionSecs ?? 0;
+                      playerPositionRef.current = position;
+                      playerDurationRef.current = saved?.durationSecs ?? playerDurationRef.current;
+                      resumePendingRef.current = false;
+                      setShowResume(false);
+                      if (provider === 'vidbolt') {
+                        if (vidboltReadyRef.current) {
+                          iframeRef.current?.contentWindow?.postMessage(
+                            { type: 'seek', time: position },
+                            'https://vidbolt.pro',
+                          );
+                          iframeRef.current?.contentWindow?.postMessage(
+                            { type: 'play' },
+                            'https://vidbolt.pro',
+                          );
+                        } else {
+                          pendingVidboltResumeRef.current = position;
+                        }
+                      }
+                    }}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
                     style={{ background: 'rgba(6,182,212,0.25)', color: 'rgb(103,232,249)', border: '1px solid rgba(6,182,212,0.35)' }}
                   >
@@ -450,9 +531,25 @@ export default function MediaPlayerModal({
                   <button
                     onClick={() => {
                       setShowResume(false);
+                      resumePendingRef.current = false;
+                      playerPositionRef.current = 0;
                       // Restart from beginning — clear saved position
                       if (mediaType === 'movie') saveMovieProgress(tmdbId, 0, 0);
                       else saveTVProgress(tmdbId, season, episode, 0, 0);
+                      if (provider === 'vidbolt') {
+                        if (vidboltReadyRef.current) {
+                          iframeRef.current?.contentWindow?.postMessage(
+                            { type: 'seek', time: 0 },
+                            'https://vidbolt.pro',
+                          );
+                          iframeRef.current?.contentWindow?.postMessage(
+                            { type: 'play' },
+                            'https://vidbolt.pro',
+                          );
+                        } else {
+                          pendingVidboltResumeRef.current = 0;
+                        }
+                      }
                     }}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors hover:bg-white/10"
                     style={{ color: 'rgba(255,255,255,0.45)' }}
@@ -472,7 +569,7 @@ export default function MediaPlayerModal({
               allowFullScreen
               allow="autoplay; fullscreen *; picture-in-picture; encrypted-media"
               referrerPolicy={provider === 'screenscape' ? 'origin' : 'no-referrer'}
-              sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-popups-to-escape-sandbox"
+              sandbox={getIframeSandbox(provider)}
               title={`${title} player`}
               onLoad={handleIframeLoad}
             />
