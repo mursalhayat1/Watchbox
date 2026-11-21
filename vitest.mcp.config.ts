@@ -4,7 +4,7 @@ export default defineConfig({
   test: {
     environment: 'node',
     globals: true,
-    include: ['tests/**/*.test.ts'],
+    include: ['tests/mcp.test.ts'],
     testTimeout: 15_000,
     hookTimeout: 15_000,
   },
