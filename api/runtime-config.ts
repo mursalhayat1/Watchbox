@@ -1,6 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { browserSafeConfig } from '../server/config.js';
 import { escapeScriptJson, sendJson } from '../server/response.js';
+import { BASIC_SECURITY_HEADERS } from '../server/security-headers.js';
 
 export default function handler(req: IncomingMessage, res: ServerResponse): void {
   if (req.method !== 'GET') {
@@ -14,7 +15,7 @@ export default function handler(req: IncomingMessage, res: ServerResponse): void
     'Content-Type': 'text/javascript; charset=utf-8',
     'Content-Length': Buffer.byteLength(script),
     'Cache-Control': 'no-store',
-    'X-Content-Type-Options': 'nosniff',
+    ...BASIC_SECURITY_HEADERS,
   });
   res.end(script);
 }

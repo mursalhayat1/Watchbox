@@ -16,6 +16,7 @@ import { useAsync, useTMDBList } from '@/hooks/useTMDB';
 import { useLibraryItem } from '@/hooks/useLibrary';
 import { LIBRARY_STATUSES, type LibraryStatus } from '@/lib/libraryApi';
 import { formatDate } from '@/lib/format-date';
+import { authorizeExternalLink, validateExplicitHttpsUrl } from '@/lib/navigation-security';
 import {
   getTVProgress,
   getMovieProgress,
@@ -684,6 +685,7 @@ export default function DetailPage() {
     () => isTV ? getTVDetails(mediaId) : getMovieDetails(mediaId),
     [mediaId, isTV]
   );
+  const movieHomepage = movie?.homepage ? validateExplicitHttpsUrl(movie.homepage) : null;
 
   // Auto-add to library as "Watching" when playback starts
   const handlePlayStart = useCallback(async (
@@ -1068,10 +1070,11 @@ export default function DetailPage() {
                     <Globe className="w-3.5 h-3.5" /> Links &amp; Resources
                   </h3>
                   <div className="space-y-2">
-                    {movie.homepage && (
+                    {movieHomepage && (
                       <div>
                         <p className="text-white/40 text-xs mb-1.5">Website</p>
-                        <a href={movie.homepage} target="_blank" rel="noopener noreferrer"
+                        <a href={movieHomepage} target="_blank" rel="noopener noreferrer"
+                          ref={anchor => authorizeExternalLink(anchor, movieHomepage)}
                           className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg text-white/80 hover:text-white transition-colors"
                           style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.10)' }}>
                           <Globe className="w-3 h-3" /> Website

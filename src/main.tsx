@@ -2,7 +2,10 @@ import * as Sentry from "@sentry/react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import { AppWrapper } from "./components/common/PageMeta.tsx";
+import { installNavigationProtection } from "./lib/navigation-security.ts";
 import "./index.css";
+
+installNavigationProtection();
 
 Sentry.init({
   dsn: import.meta.env['VITE_SENTRY_DSN'] as string | undefined,

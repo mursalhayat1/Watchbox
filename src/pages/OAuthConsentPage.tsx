@@ -4,6 +4,7 @@ import { AlertCircle, Check, Loader2, ShieldCheck } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { safeAppPath } from '@/lib/safe-return-path';
+import { validateRegisteredRedirect as registeredRedirect } from '@/lib/navigation-security';
 import { noindexMetadata } from '@/lib/seo';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,22 +17,6 @@ type ConsentDetails = Extract<
 >;
 
 type ClientPermissions = { read: boolean; write: boolean; destructive_actions_require_confirmation: boolean };
-
-function registeredRedirect(value: string, registeredUri: string): string | null {
-  try {
-    const url = new URL(value);
-    const registered = new URL(registeredUri);
-    const scheme = url.protocol.slice(0, -1).toLowerCase();
-    const safeCustomScheme = /^[a-z][a-z0-9+.-]*$/.test(scheme) && !['javascript', 'data', 'file', 'vbscript'].includes(scheme);
-    const safeTransport = url.protocol === 'https:' || (url.protocol === 'http:' && ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname)) || safeCustomScheme;
-    if (!safeTransport || url.username || url.password) return null;
-    if (url.protocol !== registered.protocol || url.host !== registered.host || url.pathname !== registered.pathname) return null;
-    if (!url.searchParams.has('code') && !url.searchParams.has('error')) return null;
-    return url.href;
-  } catch {
-    return null;
-  }
-}
 
 function clientPermissionsPath(clientId: string): string {
   return `/api/oauth/client-permissions?client_id=${encodeURIComponent(clientId)}`;

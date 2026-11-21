@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { buildEmbedUrl, getIframeSandbox } from '../src/lib/embed-providers';
+import { buildEmbedUrl } from '../src/lib/embed-providers';
+import { validateProviderUrl } from '../src/lib/navigation-security';
 
 describe('buildEmbedUrl', () => {
   it('builds Cinextream movie and episode embed URLs', () => {
@@ -16,13 +17,12 @@ describe('buildEmbedUrl', () => {
       .toBe('https://vidbolt.pro/tv/1399/2/5');
   });
 
-  it('omits the iframe sandbox only for VidBolt', () => {
-    expect(getIframeSandbox('vidbolt')).toBeUndefined();
-    const existingProviderSandbox =
-      'allow-scripts allow-same-origin allow-forms allow-presentation allow-popups-to-escape-sandbox';
-    expect(getIframeSandbox('nxsha')).toBe(existingProviderSandbox);
-    expect(getIframeSandbox('screenscape')).toBe(existingProviderSandbox);
-    expect(getIframeSandbox('cinextream')).toBe(existingProviderSandbox);
+  it('validates provider URLs against the exact approved origins', () => {
+    expect(validateProviderUrl('https://vidbolt.pro/movie/550'))
+      .toBe('https://vidbolt.pro/movie/550');
+    expect(validateProviderUrl('https://vidbolt.pro.attacker.example/movie/550')).toBeNull();
+    expect(validateProviderUrl('javascript:alert(1)')).toBeNull();
+    expect(validateProviderUrl('http://nxsha.space/embed/movie/550')).toBeNull();
   });
 
   it('preserves the existing provider URLs', () => {

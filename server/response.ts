@@ -1,4 +1,5 @@
 import type { ServerResponse } from 'node:http';
+import { BASIC_SECURITY_HEADERS } from './security-headers.js';
 
 export function sendJson(res: ServerResponse, status: number, payload: unknown, headers: Record<string, string> = {}): void {
   const body = JSON.stringify(payload);
@@ -6,7 +7,7 @@ export function sendJson(res: ServerResponse, status: number, payload: unknown, 
     'Content-Type': 'application/json; charset=utf-8',
     'Content-Length': Buffer.byteLength(body),
     'Cache-Control': 'no-store',
-    'X-Content-Type-Options': 'nosniff',
+    ...BASIC_SECURITY_HEADERS,
     ...headers,
   });
   res.end(body);

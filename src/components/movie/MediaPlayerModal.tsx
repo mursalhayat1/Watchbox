@@ -10,7 +10,7 @@ import {
 } from '@/hooks/usePlaybackProgress';
 import { getTVSeason } from '@/services/tmdb';
 import { nextEpisode, prevEpisode, isForwardStep, type EpisodeStep } from '@/lib/episode-nav';
-import { buildEmbedUrl, getIframeSandbox, PROVIDERS, type EmbedProvider } from '@/lib/embed-providers';
+import { buildEmbedUrl, PROVIDERS, type EmbedProvider } from '@/lib/embed-providers';
 
 // ── Providers ─────────────────────────────────────────────────────────────────
 const LS_KEY = 'watchbox_embed_provider';
@@ -20,7 +20,7 @@ function getSavedProvider(): EmbedProvider {
     const v = localStorage.getItem(LS_KEY);
     if (v === 'nxsha' || v === 'screenscape' || v === 'cinextream' || v === 'vidbolt') return v;
   } catch { /* ignore */ }
-  return 'nxsha';
+  return 'vidbolt';
 }
 
 function saveProvider(p: EmbedProvider) {
@@ -75,7 +75,7 @@ export default function MediaPlayerModal({
   const pendingVidboltResumeRef = useRef<number | null>(null);
   const vidboltReadyRef = useRef(false);
 
-  const embedUrl = buildEmbedUrl(provider, mediaType, tmdbId, season, episode);
+  const baseEmbedUrl = buildEmbedUrl(provider, mediaType, tmdbId, season, episode);
 
   // Determinate episode steps (null → button disabled); TV only
   const nextStep = mediaType === 'tv'
@@ -506,9 +506,9 @@ export default function MediaPlayerModal({
                       const position = saved?.positionSecs ?? 0;
                       playerPositionRef.current = position;
                       playerDurationRef.current = saved?.durationSecs ?? playerDurationRef.current;
-                      resumePendingRef.current = false;
                       setShowResume(false);
                       if (provider === 'vidbolt') {
+                        resumePendingRef.current = false;
                         if (vidboltReadyRef.current) {
                           iframeRef.current?.contentWindow?.postMessage(
                             { type: 'seek', time: position },
@@ -521,6 +521,8 @@ export default function MediaPlayerModal({
                         } else {
                           pendingVidboltResumeRef.current = position;
                         }
+                      } else {
+                        resumePendingRef.current = false;
                       }
                     }}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
@@ -531,12 +533,12 @@ export default function MediaPlayerModal({
                   <button
                     onClick={() => {
                       setShowResume(false);
-                      resumePendingRef.current = false;
                       playerPositionRef.current = 0;
                       // Restart from beginning — clear saved position
                       if (mediaType === 'movie') saveMovieProgress(tmdbId, 0, 0);
                       else saveTVProgress(tmdbId, season, episode, 0, 0);
                       if (provider === 'vidbolt') {
+                        resumePendingRef.current = false;
                         if (vidboltReadyRef.current) {
                           iframeRef.current?.contentWindow?.postMessage(
                             { type: 'seek', time: 0 },
@@ -549,6 +551,8 @@ export default function MediaPlayerModal({
                         } else {
                           pendingVidboltResumeRef.current = 0;
                         }
+                      } else {
+                        resumePendingRef.current = false;
                       }
                     }}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors hover:bg-white/10"
@@ -562,14 +566,13 @@ export default function MediaPlayerModal({
 
             <iframe
               ref={iframeRef}
-              key={embedUrl}
-              src={embedUrl}
+              key={baseEmbedUrl}
+              src={baseEmbedUrl}
               className="w-full h-full border-0"
               style={{ opacity: loaded ? 1 : 0, transition: 'opacity 0.3s' }}
               allowFullScreen
               allow="autoplay; fullscreen *; picture-in-picture; encrypted-media"
               referrerPolicy={provider === 'screenscape' ? 'origin' : 'no-referrer'}
-              sandbox={getIframeSandbox(provider)}
               title={`${title} player`}
               onLoad={handleIframeLoad}
             />

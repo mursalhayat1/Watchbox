@@ -1,6 +1,7 @@
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { extname, resolve, sep } from 'node:path';
+import { TLSSocket } from 'node:tls';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
@@ -9,6 +10,11 @@ import { browserSafeConfig, isReadClientAllowed, isWriteClientAllowed, loadConfi
 import { challengeHeader, protectedResourceMetadata, rateMetadataProblem } from './oauth-metadata.js';
 import { WatchboxRepository } from './repository.js';
 import { escapeScriptJson, sendJson, setMcpCors } from './response.js';
+import {
+  BASIC_SECURITY_HEADERS,
+  CONTENT_SECURITY_POLICY,
+  STRICT_TRANSPORT_SECURITY,
+} from './security-headers.js';
 import { createWatchboxMcpServer } from './tools.js';
 
 export { protectedResourceMetadata, rateMetadataProblem } from './oauth-metadata.js';
@@ -92,6 +98,16 @@ function htmlWithRuntimeConfig(html: string): string {
   return html.replace(/<head([^>]*)>/i, (match) => `${match}${runtimeScript}`);
 }
 
+function applyBaseSecurityHeaders(req: IncomingMessage, res: ServerResponse): void {
+  for (const [name, value] of Object.entries(BASIC_SECURITY_HEADERS)) {
+    res.setHeader(name, value);
+  }
+  const forwardedProtocol = req.headers['x-forwarded-proto'];
+  const isHttps = req.socket instanceof TLSSocket
+    || (typeof forwardedProtocol === 'string' && forwardedProtocol.split(',')[0].trim() === 'https');
+  if (isHttps) res.setHeader('Strict-Transport-Security', STRICT_TRANSPORT_SECURITY);
+}
+
 async function serveStatic(req: IncomingMessage, res: ServerResponse, staticRoot: string): Promise<void> {
   if (req.method !== 'GET' && req.method !== 'HEAD') {
     res.setHeader('Allow', 'GET, HEAD');
@@ -140,7 +156,8 @@ async function serveStatic(req: IncomingMessage, res: ServerResponse, staticRoot
       'Content-Type': contentType(target),
       'Content-Length': body.byteLength,
       'Cache-Control': isHtml ? 'no-store' : isHashedAsset ? 'public, max-age=31536000, immutable' : 'no-cache',
-      'X-Content-Type-Options': 'nosniff',
+      ...BASIC_SECURITY_HEADERS,
+      ...(isHtml ? { 'Content-Security-Policy': CONTENT_SECURITY_POLICY } : {}),
     });
     res.end(req.method === 'HEAD' ? undefined : body);
   } catch {
@@ -281,6 +298,7 @@ export function createWatchboxHttpServer(options: HttpServerOptions = {}) {
   const dependencies = { config, authenticate, createRepository, fetcher: options.fetcher };
 
   return createServer(async (req, res) => {
+    applyBaseSecurityHeaders(req, res);
     const pathname = new URL(req.url ?? '/', 'http://localhost').pathname;
 
     if (pathname === '/_app/health') {
@@ -294,7 +312,7 @@ export function createWatchboxHttpServer(options: HttpServerOptions = {}) {
         'Content-Type': 'text/javascript; charset=utf-8',
         'Content-Length': Buffer.byteLength(script),
         'Cache-Control': 'no-store',
-        'X-Content-Type-Options': 'nosniff',
+        ...BASIC_SECURITY_HEADERS,
       });
       res.end(script);
       return;
